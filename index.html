@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#07111f">
+<title>Marine Prep Pro</title>
+<link rel="manifest" href="manifest.json">
+<style>
+:root{--bg:#07111f;--panel:#0e1b2e;--panel2:#13243a;--line:#243a56;--text:#f3f7fc;--muted:#9db0c8;--green:#4ade80;--yellow:#fbbf24;--red:#fb7185;--blue:#60a5fa;--safe:env(safe-area-inset-bottom)}
+*{box-sizing:border-box}body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:linear-gradient(180deg,#06101d,#0a1525 45%,#07111f);color:var(--text);min-height:100vh}
+button,input,select,textarea{font:inherit}.top{position:sticky;top:0;z-index:10;padding:calc(12px + env(safe-area-inset-top)) 16px 12px;background:rgba(7,17,31,.93);backdrop-filter:blur(18px);border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:center;justify-content:space-between}.brand h1{font-size:1.15rem;margin:0}.badge{font-size:.75rem;padding:5px 9px;border:1px solid #315071;border-radius:999px;color:#b9cae0}
+main{max-width:950px;margin:auto;padding:16px 16px 105px}.card{background:rgba(14,27,46,.95);border:1px solid var(--line);border-radius:18px;padding:16px;margin:14px 0;box-shadow:0 12px 34px rgba(0,0,0,.2)}
+.hero{background:radial-gradient(circle at top right,rgba(74,222,128,.16),transparent 40%),var(--panel)}h2,h3{margin:0 0 10px}.muted{color:var(--muted)}.small{font-size:.84rem}.row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.between{justify-content:space-between}
+button{border:0;border-radius:12px;padding:11px 14px;font-weight:750;background:var(--green);color:#052e16}button.secondary{background:#203550;color:var(--text)}button.ghost{background:transparent;border:1px solid var(--line);color:var(--text)}button.warn{background:var(--yellow);color:#422006}
+select,input,textarea{background:#091625;border:1px solid #34506f;color:var(--text);border-radius:11px;padding:10px;width:100%}.compact{width:auto}
+.progress{height:11px;background:#1d3049;border-radius:999px;overflow:hidden}.bar{height:100%;background:linear-gradient(90deg,var(--green),#22c55e);width:0;transition:.25s}
+.nav{position:fixed;left:0;right:0;bottom:0;padding:8px 8px calc(8px + var(--safe));background:rgba(8,18,32,.96);backdrop-filter:blur(15px);border-top:1px solid var(--line);display:flex;z-index:20}
+.nav button{flex:1;background:transparent;color:var(--muted);padding:9px 3px;font-size:.72rem}.nav button.active{color:var(--green)}.nav .icon{display:block;font-size:1.25rem;margin-bottom:3px}
+.hidden{display:none!important}.day{padding:13px 0;border-bottom:1px solid #1d3049}.day:last-child{border-bottom:0}.dayhead{display:flex;align-items:flex-start;gap:10px}.check{width:24px;height:24px;accent-color:var(--green);flex:none;margin-top:2px}
+.exercise{display:flex;justify-content:space-between;gap:10px;align-items:center;background:var(--panel2);border:1px solid #263d5a;border-radius:13px;padding:11px;margin-top:8px;cursor:pointer}.exercise:active{transform:scale(.99)}.exercise strong{display:block}.tap{color:var(--blue);font-size:.76rem;white-space:nowrap}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}.metric{padding:12px;border-radius:13px;background:var(--panel2)}.metric label{display:block;font-size:.76rem;color:var(--muted);margin-bottom:7px}
+.ring{width:120px;height:120px;border-radius:50%;display:grid;place-items:center;background:conic-gradient(var(--green) 0deg,#1d3049 0)}.ringin{width:92px;height:92px;border-radius:50%;background:var(--panel);display:grid;place-items:center;text-align:center}.score{font-size:1.65rem;font-weight:850}
+.calendar{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}.calday{aspect-ratio:1;border-radius:9px;background:#162a43;display:grid;place-items:center;font-size:.72rem}.calday.done{background:#166534}.calday.partial{background:#854d0e}.calday.today{outline:2px solid var(--blue)}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:50;display:flex;align-items:flex-end;justify-content:center}.sheet{width:100%;max-width:700px;max-height:91vh;overflow:auto;background:#0c192a;border-radius:24px 24px 0 0;border:1px solid #2b4667;padding:18px 18px calc(20px + var(--safe))}
+.demo{height:210px;border-radius:16px;background:radial-gradient(circle at 50% 40%,#274563,#101f33);display:flex;align-items:center;justify-content:center;overflow:hidden;margin:12px 0}
+.person{position:relative;width:120px;height:170px;animation:demo 2.4s ease-in-out infinite}.head{position:absolute;width:30px;height:30px;border-radius:50%;background:#d8e6f7;left:45px;top:8px}.torso{position:absolute;width:16px;height:65px;border-radius:10px;background:#d8e6f7;left:52px;top:39px}.limb{position:absolute;width:12px;height:62px;border-radius:10px;background:#d8e6f7;transform-origin:top center}.la{left:43px;top:45px;transform:rotate(28deg)}.ra{left:65px;top:45px;transform:rotate(-28deg)}.ll{left:48px;top:96px;transform:rotate(12deg)}.rl{left:61px;top:96px;transform:rotate(-12deg)}
+@keyframes demo{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(25px) rotate(0)}}.demo.run .person{animation:run 1s linear infinite}@keyframes run{0%,100%{transform:translateX(-10px) rotate(-2deg)}50%{transform:translateX(10px) rotate(2deg)}}.demo.swim .person{transform:rotate(90deg);animation:swim 1.8s ease-in-out infinite}@keyframes swim{0%,100%{transform:rotate(90deg) translateX(-12px)}50%{transform:rotate(90deg) translateX(12px)}}.demo.plank .person{transform:rotate(90deg);animation:none}.demo.pushup .person{transform:rotate(90deg);animation:push 1.8s ease-in-out infinite}@keyframes push{0%,100%{transform:rotate(90deg) translateX(0)}50%{transform:rotate(90deg) translateX(20px)}}.demo.hinge .person{animation:hinge 2s ease-in-out infinite;transform-origin:60px 100px}@keyframes hinge{0%,100%{transform:rotate(0)}50%{transform:rotate(40deg)}}.demo.carry .person{animation:run 1.5s linear infinite}
+.steps{padding-left:20px}.steps li{margin:9px 0;color:#d8e5f4}.chips{display:flex;flex-wrap:wrap;gap:7px}.chip{background:#1a314d;padding:7px 9px;border-radius:999px;color:#bdd0e5;font-size:.78rem}
+.timer{font-size:3rem;font-weight:850;letter-spacing:2px;text-align:center;margin:15px 0}.timerBtns{display:flex;gap:8px}.timerBtns button{flex:1}
+.achievement{display:flex;gap:10px;align-items:center;padding:11px;border-radius:13px;background:var(--panel2);margin:8px 0}.locked{opacity:.38;filter:grayscale(1)}
+canvas{width:100%;height:230px;background:#0a1728;border-radius:13px}.notice{border-left:4px solid var(--yellow);padding:10px 12px;background:#3a2a0a;border-radius:8px;color:#fde68a}
+</style>
+</head>
+<body>
+<div class="top"><div class="brand"><h1>Marine Prep Pro</h1><span class="badge">YEAR 1</span></div></div>
+<main>
+<section id="dashboard">
+ <div class="card hero">
+  <div class="row between"><div><div class="muted small">Current training week</div><h2 id="heroWeek">Week 1</h2></div><div class="ring" id="readinessRing"><div class="ringin"><div><div class="score" id="readinessScore">0</div><div class="small muted">readiness</div></div></div></div></div>
+  <div class="progress"><div class="bar" id="heroBar"></div></div><div class="small muted" id="heroPct" style="margin-top:7px"></div>
+  <div class="row" style="margin-top:12px"><button onclick="switchTab('week')">Open this week</button><button class="secondary" onclick="openTimer()">Workout timer</button></div>
+ </div>
+ <div class="card"><h3>Today</h3><div id="todayCard"></div></div>
+ <div class="card"><h3>Readiness breakdown</h3><div class="grid" id="readinessBreakdown"></div></div>
+ <div class="card"><h3>Achievements</h3><div id="achievements"></div></div>
+</section>
+
+<section id="week" class="hidden">
+ <div class="card">
+  <div class="row between"><h2>Weekly plan</h2><select id="weekSelect" class="compact"></select></div>
+  <div class="progress" style="margin-top:12px"><div class="bar" id="weekBar"></div></div><div class="small muted" id="weekPct" style="margin-top:7px"></div>
+ </div>
+ <div class="card" id="weekDays"></div>
+ <div class="card"><h3>Weekly check-in</h3><div class="grid">
+  <div class="metric"><label>Sleep average</label><input id="sleep" type="number" step=".1"></div>
+  <div class="metric"><label>Energy 1–10</label><input id="energy" type="number" min="1" max="10"></div>
+  <div class="metric"><label>Pain 0–10</label><input id="pain" type="number" min="0" max="10"></div>
+  <div class="metric"><label>Body weight</label><input id="weight" type="number" step=".1"></div>
+ </div><label class="small muted" style="display:block;margin:12px 0 6px">Notes</label><textarea id="notes" rows="4"></textarea><button style="margin-top:10px" onclick="saveCheckin()">Save check-in</button></div>
+</section>
+
+<section id="calendar" class="hidden"><div class="card"><h2>52-week calendar</h2><p class="muted small">Green means all seven days recorded complete. Gold means partially complete.</p><div class="calendar" id="calendarGrid"></div></div></section>
+
+<section id="progress" class="hidden">
+ <div class="card"><h2>Progress log</h2><div class="grid">
+  <div class="metric"><label>Push-ups</label><input id="pushups" type="number"></div>
+  <div class="metric"><label>Pull-ups</label><input id="pullups" type="number"></div>
+  <div class="metric"><label>Plank seconds</label><input id="plank" type="number"></div>
+  <div class="metric"><label>3-mile time</label><input id="run3" placeholder="31:45"></div>
+  <div class="metric"><label>Continuous swim yards</label><input id="swimdist" type="number"></div>
+  <div class="metric"><label>Tread minutes</label><input id="tread" type="number" step=".5"></div>
+  <div class="metric"><label>Ruck miles</label><input id="ruckdist" type="number" step=".1"></div>
+  <div class="metric"><label>Ruck weight lb</label><input id="ruckwt" type="number"></div>
+ </div><button style="margin-top:12px" onclick="saveProgress()">Save progress entry</button></div>
+ <div class="card"><h3>Progress chart</h3><select id="chartMetric" onchange="drawChart()"><option value="pushups">Push-ups</option><option value="pullups">Pull-ups</option><option value="plank">Plank</option><option value="swimdist">Swim distance</option><option value="tread">Treading</option><option value="ruckdist">Ruck distance</option><option value="ruckwt">Ruck weight</option></select><canvas id="chart" width="700" height="250"></canvas></div>
+ <div class="card"><h3>Swimming gates</h3><p class="muted small">Swimming advances independently from the rest of the program.</p><div id="swimGates"></div></div>
+ <div class="card"><h3>Supplements</h3><div id="supplements"></div><div class="notice small" style="margin-top:12px">Because you use a GLP-1, review supplements and major increases in training with the clinician managing it.</div></div>
+</section>
+</main>
+
+<div class="nav">
+<button class="active" data-tab="dashboard" onclick="switchTab('dashboard')"><span class="icon">⌂</span>Home</button>
+<button data-tab="week" onclick="switchTab('week')"><span class="icon">✓</span>Week</button>
+<button data-tab="calendar" onclick="switchTab('calendar')"><span class="icon">▦</span>Calendar</button>
+<button data-tab="progress" onclick="switchTab('progress')"><span class="icon">↗</span>Progress</button>
+</div>
+
+<div id="demoModal" class="modal hidden" onclick="closeOnBackdrop(event,'demoModal')"><div class="sheet"><div class="row between"><h2 id="demoTitle"></h2><button class="ghost" onclick="closeModal('demoModal')">Close</button></div><div class="small muted" id="demoPrescription"></div><div class="demo" id="demoVisual"><div class="person"><div class="head"></div><div class="torso"></div><div class="limb la"></div><div class="limb ra"></div><div class="limb ll"></div><div class="limb rl"></div></div></div><h3>How to do it</h3><ol class="steps" id="demoSteps"></ol><h3>Key cues</h3><div class="chips" id="demoCues"></div><div class="notice small" style="margin-top:14px">Stop for sharp pain, worsening pain, dizziness, chest pain, or unusual shortness of breath.</div></div></div>
+
+<div id="timerModal" class="modal hidden" onclick="closeOnBackdrop(event,'timerModal')"><div class="sheet"><div class="row between"><h2>Workout timer</h2><button class="ghost" onclick="closeModal('timerModal')">Close</button></div><div class="timer" id="timerText">00:00</div><div class="timerBtns"><button onclick="timerStart()">Start</button><button class="secondary" onclick="timerPause()">Pause</button><button class="warn" onclick="timerReset()">Reset</button></div><div class="grid" style="margin-top:14px"><button class="ghost" onclick="setTimer(30)">30 sec</button><button class="ghost" onclick="setTimer(60)">1 min</button><button class="ghost" onclick="setTimer(90)">90 sec</button><button class="ghost" onclick="setTimer(120)">2 min</button><button class="ghost" onclick="setTimer(300)">5 min</button><button class="ghost" onclick="setTimer(600)">10 min</button></div></div></div>
+
+<script src="app.js"></script>
+</body></html>
