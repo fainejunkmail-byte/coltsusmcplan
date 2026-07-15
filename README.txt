@@ -51,3 +51,8 @@ Version 4:
 - Ship-date countdown.
 - Export/import backup.
 - Automatic progression guide.
+
+Version 4.1 hotfix:
+- Fixed a JavaScript syntax error in the statistics code.
+- The error prevented tabs, buttons, and most interactive features from working.
+- Added visible v4.1 and BUILD 4.1 labels.

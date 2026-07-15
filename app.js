@@ -215,7 +215,7 @@ function renderStats(){
   ['Ruck load',latest.ruckwt?latest.ruckwt+' lb':'—']
  ];
  document.getElementById('personalRecords').innerHTML=records.map(x=>`<div class="metric"><label>${x[0]}</label><span class="statBig">${x[1]}</span></div>`).join('');
- const by={};logs.forEach(l=>(by[l.name]||(by[l.name]=[])).push(l);
+ const by={};logs.forEach(l=>(by[l.name]||(by[l.name]=[])).push(l));
  const names=Object.keys(by).sort().slice(0,20);
  document.getElementById('exerciseProgression').innerHTML=names.length?names.map(name=>{
   const arr=by[name],last=arr[arr.length-1],best=Math.max(...arr.map(x=>+x.weight||0));
