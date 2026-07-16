@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#07111f">
-<title>Marine Prep Pro v6.2</title>
-<link rel="manifest" href="manifest.json?v=62">
+<title>Marine Prep Pro v6.3</title>
+<link rel="manifest" href="manifest.json?v=63">
 <style>
 :root{--bg:#07111f;--panel:#0e1b2e;--panel2:#13243a;--line:#243a56;--text:#f3f7fc;--muted:#9db0c8;--green:#4ade80;--yellow:#fbbf24;--red:#fb7185;--blue:#60a5fa;--safe:env(safe-area-inset-bottom)}
 *{box-sizing:border-box}body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:linear-gradient(180deg,#06101d,#0a1525 45%,#07111f);color:var(--text);min-height:100vh}
@@ -116,10 +116,16 @@ body.light .ghost{color:var(--text)}
 .editableLog{cursor:pointer;padding:10px 0;border-bottom:1px solid var(--line)}
 .editableLog:last-child{border-bottom:0}.editableLog:active{opacity:.72}
 .editableLog strong{color:var(--text)}.editHint{font-size:.75rem;color:var(--muted);margin-top:3px}
+
+.demoHeader{gap:10px}
+.demoHeader h2{flex:1;margin:0;text-align:center}
+.demoBackButton{width:44px;height:44px;padding:0;border-radius:50%;font-size:1.45rem;line-height:1;background:var(--panel2);color:var(--text);border:1px solid var(--line)}
+.demoBottomBack{width:100%;margin-top:14px}
+#recommendedVideoSource{padding:0 4px 4px}
 </style>
 </head>
 <body>
-<div class="top"><div class="brand"><h1>Marine Prep Pro <span class="versionMark">v6.2</span></h1><span class="badge">YEAR 1</span>
+<div class="top"><div class="brand"><h1>Marine Prep Pro <span class="versionMark">v6.3</span></h1><span class="badge">YEAR 1</span>
 <button class="menuButton" aria-label="Open menu" onclick="toggleAppMenu(event)">
  <span></span><span></span><span></span>
 </button></div></div>
@@ -447,8 +453,12 @@ body.light .ghost{color:var(--text)}
 <button data-tab="tools" onclick="openTools('progress')"><span class="icon">↗</span>Logs</button>
 </div>
 
-<div id="demoModal" class="modal hidden" onclick="closeOnBackdrop(event,'demoModal')"><div class="sheet">
-<div class="row between"><h2 id="demoTitle"></h2><button class="ghost" onclick="closeModal('demoModal')">Close</button></div>
+<div id="demoModal" class="modal hidden" onclick="if(event.target.id==='demoModal')returnFromDemo()"><div class="sheet">
+<div class="row between demoHeader">
+ <button class="demoBackButton" onclick="returnFromDemo()" aria-label="Back to Strength Library">←</button>
+ <h2 id="demoTitle"></h2>
+ <button class="ghost" onclick="returnFromDemo()">Close</button>
+</div>
 <div class="small muted" id="demoPrescription"></div>
 <div class="demo visual-demo" id="demoVisual"></div>
 <div class="row between">
@@ -467,13 +477,15 @@ body.light .ghost{color:var(--text)}
  <div class="small muted" id="lastExerciseLog" style="margin-top:5px"></div>
 </div>
 <div class="grid" style="margin:12px 0">
- <button onclick="watchExerciseVideo()">Watch actual video</button>
+ <button id="recommendedVideoButton" onclick="watchExerciseVideo()">Watch recommended video</button>
  <button class="secondary" onclick="openExerciseLog()">Log this exercise</button>
+ <div id="recommendedVideoSource" class="small muted" style="grid-column:1/-1"></div>
 </div>
 
 <h3>All steps</h3><ol class="steps" id="demoSteps"></ol>
 <h3>Key form cues</h3><div class="chips" id="demoCues"></div>
 <div class="notice small" style="margin-top:14px">These diagrams are simplified form guides. Start light and ask a qualified coach to check unfamiliar lifts. Stop for sharp or worsening pain, dizziness, chest pain, or unusual shortness of breath.</div>
+<button class="secondary demoBottomBack" onclick="returnFromDemo()">← Back to Strength Library</button>
 </div></div>
 
 
@@ -540,5 +552,5 @@ body.light .ghost{color:var(--text)}
 <div id="timerModal" class="modal hidden" onclick="closeOnBackdrop(event,'timerModal')"><div class="sheet"><div class="row between"><h2>Workout timer</h2><button class="ghost" onclick="closeModal('timerModal')">Close</button></div><div class="timer" id="timerText">00:00</div><div class="timerBtns"><button onclick="timerStart()">Start</button><button class="secondary" onclick="timerPause()">Pause</button><button class="warn" onclick="timerReset()">Reset</button></div><div class="grid" style="margin-top:14px"><button class="ghost" onclick="setTimer(30)">30 sec</button><button class="ghost" onclick="setTimer(60)">1 min</button><button class="ghost" onclick="setTimer(90)">90 sec</button><button class="ghost" onclick="setTimer(120)">2 min</button><button class="ghost" onclick="setTimer(300)">5 min</button><button class="ghost" onclick="setTimer(600)">10 min</button></div></div></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="app.js?v=62"></script>
+<script src="app.js?v=63"></script>
 </body></html>

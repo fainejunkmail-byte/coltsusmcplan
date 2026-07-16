@@ -1,5 +1,5 @@
-const CACHE='marine-prep-pro-v6-2';
-const CORE=['./','./index.html','./app.js?v=62','./manifest.json?v=62','./icon.svg?v=62'];
+const CACHE='marine-prep-pro-v6-3';
+const CORE=['./','./index.html','./app.js?v=63','./manifest.json?v=63','./icon.svg?v=63'];
 self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(CORE)).then(()=>self.skipWaiting())));
 self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(k=>Promise.all(k.filter(x=>x!==CACHE).map(x=>caches.delete(x)))).then(()=>self.clients.claim())));
 self.addEventListener('fetch',e=>{

@@ -166,3 +166,10 @@ Version 6.2:
 - Removed dependency on SMTP, Resend, magic links, OTP codes, and Safari redirects.
 - Added 15-second authentication timeouts and readable Supabase error messages.
 - Existing app_backups cloud storage and local offline data remain compatible.
+
+Version 6.3:
+- Added a prominent back arrow to every exercise demonstration.
+- Added a second Back to Strength Library button at the bottom of each demo.
+- Backdrop and Close controls now return reliably to the Strength Library.
+- Replaced YouTube search pages with one preselected direct instructional video for every exercise.
+- Shows the selected instructional channel beneath the video button.
