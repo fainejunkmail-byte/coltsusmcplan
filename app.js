@@ -7,7 +7,7 @@ let activeExerciseLogName=null;
 let trainingMode=localStorage.getItem('trainingMode')||'normal';
 
 
-const APP_VERSION='6.1';
+const APP_VERSION='6.2';
 const SUPABASE_URL='https://ewzmwoepcukxxeabimsy.supabase.co';
 const SUPABASE_PUBLISHABLE_KEY='sb_publishable_itOe_-3RBRY_6rlZ60LRWw_B02V7f3T';
 
@@ -159,73 +159,111 @@ async function handleCloudSession(session){
  await reconcileCloudBackup();
 }
 
-async function sendEmailCode(){
- const email=(document.getElementById('cloudEmail')?.value||'').trim();
- const button=document.getElementById('cloudEmailButton');
+function cloudCredentials(){
+ return {
+  email:(document.getElementById('cloudEmail')?.value||'').trim(),
+  password:document.getElementById('cloudPassword')?.value||''
+ };
+}
+function validateCloudCredentials(email,password){
  if(!email || !email.includes('@')){
   setCloudStatus('Enter a valid email address.','error');
   alert('Enter a valid email address.');
-  return;
+  return false;
+ }
+ if(password.length<8){
+  setCloudStatus('Password must contain at least 8 characters.','error');
+  alert('Use a password with at least 8 characters.');
+  return false;
  }
  if(!supabaseClient){
-  setCloudStatus('Cloud sign-in has not finished loading. Reload the app and try again.','error');
-  alert('Cloud sign-in has not finished loading. Reload the app and try again.');
-  return;
+  setCloudStatus('Cloud connection is not ready. Tap Retry cloud connection.','error');
+  showCloudRetry(true);
+  return false;
  }
- if(button){button.disabled=true;button.textContent='Sending code…'}
- try{
-  setCloudStatus('Sending sign-in code…','busy');
-  const {error}=await supabaseClient.auth.signInWithOtp({
-   email,
-   options:{shouldCreateUser:true}
-  });
-  if(error)throw error;
-  document.getElementById('cloudCodeArea')?.classList.remove('hidden');
-  document.getElementById('cloudEmailCode')?.focus();
-  setCloudStatus('Code sent. Enter it below.','ok');
-  alert('Sign-in code sent. Check Inbox and Spam, then type the code into the pinned app.');
- }catch(error){
-  console.error(error);
-  setCloudStatus('Code could not be sent: '+(error.message||'unknown error'),'error');
-  alert(error.message||'The sign-in code could not be sent.');
- }finally{
-  if(button){button.disabled=false;button.textContent='Send sign-in code'}
- }
+ return true;
 }
-
-async function verifyEmailCode(){
- const email=(document.getElementById('cloudEmail')?.value||'').trim();
- const token=(document.getElementById('cloudEmailCode')?.value||'').replace(/\s/g,'');
- const button=document.getElementById('cloudVerifyButton');
- if(!email || !token){
-  alert('Enter both your email and the code from the email.');
-  return;
- }
- if(!supabaseClient){
-  alert('Cloud sign-in is still loading.');
-  return;
- }
- if(button){button.disabled=true;button.textContent='Verifying…'}
+function cloudErrorMessage(error){
+ if(!error)return 'Unknown error';
+ if(typeof error==='string')return error;
+ if(error.message)return error.message;
+ if(error.error_description)return error.error_description;
  try{
-  setCloudStatus('Verifying sign-in code…','busy');
-  const {data,error}=await supabaseClient.auth.verifyOtp({
-   email,
-   token,
-   type:'email'
-  });
+  const text=JSON.stringify(error);
+  return text==='{}'?'Supabase returned an unspecified authentication error.':text;
+ }catch{return 'Unknown authentication error'}
+}
+function setAuthButtonsBusy(busy,label='Working…'){
+ const signIn=document.getElementById('cloudSignInButton');
+ const create=document.getElementById('cloudCreateButton');
+ if(signIn){signIn.disabled=busy;signIn.textContent=busy&&label==='Signing in…'?label:'Sign in'}
+ if(create){create.disabled=busy;create.textContent=busy&&label==='Creating…'?label:'Create account'}
+}
+async function cloudPasswordSignIn(){
+ const {email,password}=cloudCredentials();
+ if(!validateCloudCredentials(email,password))return;
+ setAuthButtonsBusy(true,'Signing in…');
+ setCloudStatus('Signing in…','busy');
+ setCloudDiagnostic('');
+ try{
+  const {data,error}=await withTimeout(
+   supabaseClient.auth.signInWithPassword({email,password}),
+   15000,
+   'Password sign-in'
+  );
   if(error)throw error;
-  if(!data?.session)throw new Error('Supabase did not return a signed-in session.');
+  if(!data?.session)throw new Error('No signed-in session was returned.');
   cloudUser=data.user||data.session.user;
   showCloudUser(cloudUser);
-  document.getElementById('cloudEmailCode').value='';
+  document.getElementById('cloudPassword').value='';
   setCloudStatus('Signed in. Checking cloud backup…','busy');
   await reconcileCloudBackup();
  }catch(error){
+  const message=cloudErrorMessage(error);
   console.error(error);
-  setCloudStatus('Code verification failed.','error');
-  alert(error.message||'The code was invalid or expired.');
+  setCloudStatus('Sign-in failed.','error');
+  setCloudDiagnostic(message);
+  showCloudRetry(error?.message?.includes('timed out'));
+  alert(message);
  }finally{
-  if(button){button.disabled=false;button.textContent='Verify code and sign in'}
+  setAuthButtonsBusy(false);
+ }
+}
+async function cloudCreateAccount(){
+ const {email,password}=cloudCredentials();
+ if(!validateCloudCredentials(email,password))return;
+ if(!confirm('Create a Marine Prep Pro cloud account using this email?'))return;
+ setAuthButtonsBusy(true,'Creating…');
+ setCloudStatus('Creating account…','busy');
+ setCloudDiagnostic('');
+ try{
+  const {data,error}=await withTimeout(
+   supabaseClient.auth.signUp({email,password}),
+   15000,
+   'Account creation'
+  );
+  if(error)throw error;
+  if(!data?.session){
+   throw new Error('Account was created but Supabase did not sign it in. Confirm Email may still be enabled in Supabase.');
+  }
+  cloudUser=data.user||data.session.user;
+  showCloudUser(cloudUser);
+  document.getElementById('cloudPassword').value='';
+  setCloudStatus('Account created. Creating cloud backup…','busy');
+  await reconcileCloudBackup();
+ }catch(error){
+  const message=cloudErrorMessage(error);
+  console.error(error);
+  setCloudStatus('Account could not be created.','error');
+  setCloudDiagnostic(message);
+  showCloudRetry(error?.message?.includes('timed out'));
+  if(/already registered|already been registered|user already exists/i.test(message)){
+   alert('That email already has a Supabase account. Use Sign in with its existing password. If this was an old code-only test account with no password, delete that user under Supabase → Authentication → Users, then create the account again.');
+  }else{
+   alert(message);
+  }
+ }finally{
+  setAuthButtonsBusy(false);
  }
 }
 async function cloudSignOut(){
@@ -1293,5 +1331,5 @@ if(localStorage.getItem('mp_last_version')!==APP_VERSION){
 window.addEventListener('online',()=>{setCloudDiagnostic('Internet connection restored.');retryCloudSync()});
 window.addEventListener('offline',()=>{setCloudStatus('Offline. Data is saved locally.','busy');setCloudDiagnostic('Cloud sync will resume when internet returns.');showCloudRetry(true)});
 renderAll();drawChart();initCloudSync();setTimeout(()=>{const e=document.getElementById('walkDate');if(e&&!e.value)e.value=new Date().toISOString().slice(0,10)},0);if('serviceWorker'in navigator){
- navigator.serviceWorker.register('sw.js?v=61').then(reg=>reg.update()).catch(console.error);
+ navigator.serviceWorker.register('sw.js?v=62').then(reg=>reg.update()).catch(console.error);
 }

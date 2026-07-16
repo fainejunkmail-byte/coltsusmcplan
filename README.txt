@@ -159,3 +159,10 @@ Version 6.1:
 - Added Retry cloud connection button and diagnostic status.
 - Added online/offline detection and automatic retry when connectivity returns.
 - Added timeouts for Supabase session and backup requests.
+
+Version 6.2:
+- Replaced email-code authentication with direct email and password authentication.
+- Added Create account and Sign in buttons.
+- Removed dependency on SMTP, Resend, magic links, OTP codes, and Safari redirects.
+- Added 15-second authentication timeouts and readable Supabase error messages.
+- Existing app_backups cloud storage and local offline data remain compatible.
