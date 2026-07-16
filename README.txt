@@ -62,3 +62,9 @@ Version 4.2:
 - Readiness categories are now tappable.
 - Each category explains the score, data used, strengths, weaknesses, and next actions.
 - Added detailed explanations for consistency, strength, endurance, swimming, rucking, and recovery.
+
+Version 4.3:
+- Added Hotel Week training mode.
+- Hotel Week uses quiet, low-space joint armor, posture, mobility, and lower-body maintenance.
+- Normal sightseeing and travel walking counts as the main conditioning.
+- Push-ups and other conspicuous floor work are not required.
