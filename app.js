@@ -7,7 +7,7 @@ let activeExerciseLogName=null;
 let trainingMode=localStorage.getItem('trainingMode')||'normal';
 
 
-const APP_VERSION='5.9';
+const APP_VERSION='6.0';
 const SUPABASE_URL='https://ewzmwoepcukxxeabimsy.supabase.co';
 const SUPABASE_PUBLISHABLE_KEY='sb_publishable_itOe_-3RBRY_6rlZ60LRWw_B02V7f3T';
 
@@ -126,7 +126,7 @@ async function handleCloudSession(session){
  await reconcileCloudBackup();
 }
 
-async function sendMagicLink(){
+async function sendEmailCode(){
  const email=(document.getElementById('cloudEmail')?.value||'').trim();
  const button=document.getElementById('cloudEmailButton');
  if(!email || !email.includes('@')){
@@ -135,30 +135,66 @@ async function sendMagicLink(){
   return;
  }
  if(!supabaseClient){
-  setCloudStatus('Cloud sign-in has not finished loading. Reload the page and try again.','error');
-  alert('Cloud sign-in has not finished loading. Reload the page and try again.');
+  setCloudStatus('Cloud sign-in has not finished loading. Reload the app and try again.','error');
+  alert('Cloud sign-in has not finished loading. Reload the app and try again.');
   return;
  }
- if(button){button.disabled=true;button.textContent='Sending…'}
+ if(button){button.disabled=true;button.textContent='Sending code…'}
  try{
-  setCloudStatus('Sending sign-in email…','busy');
-  const redirectTo=window.location.origin+window.location.pathname;
+  setCloudStatus('Sending sign-in code…','busy');
   const {error}=await supabaseClient.auth.signInWithOtp({
    email,
-   options:{emailRedirectTo:redirectTo,shouldCreateUser:true}
+   options:{shouldCreateUser:true}
   });
   if(error)throw error;
-  setCloudStatus('Email sent. Check Inbox and Spam, then open the link on this device.','ok');
-  alert('Sign-in email sent. Check Inbox and Spam, then open the link on this device.');
+  document.getElementById('cloudCodeArea')?.classList.remove('hidden');
+  document.getElementById('cloudEmailCode')?.focus();
+  setCloudStatus('Code sent. Enter it below.','ok');
+  alert('Sign-in code sent. Check Inbox and Spam, then type the code into the pinned app.');
  }catch(error){
   console.error(error);
-  setCloudStatus('Email could not be sent: '+(error.message||'unknown error'),'error');
-  alert(error.message||'The sign-in email could not be sent.');
+  setCloudStatus('Code could not be sent: '+(error.message||'unknown error'),'error');
+  alert(error.message||'The sign-in code could not be sent.');
  }finally{
-  if(button){button.disabled=false;button.textContent='Email me a sign-in link'}
+  if(button){button.disabled=false;button.textContent='Send sign-in code'}
  }
 }
 
+async function verifyEmailCode(){
+ const email=(document.getElementById('cloudEmail')?.value||'').trim();
+ const token=(document.getElementById('cloudEmailCode')?.value||'').replace(/\s/g,'');
+ const button=document.getElementById('cloudVerifyButton');
+ if(!email || !token){
+  alert('Enter both your email and the code from the email.');
+  return;
+ }
+ if(!supabaseClient){
+  alert('Cloud sign-in is still loading.');
+  return;
+ }
+ if(button){button.disabled=true;button.textContent='Verifying…'}
+ try{
+  setCloudStatus('Verifying sign-in code…','busy');
+  const {data,error}=await supabaseClient.auth.verifyOtp({
+   email,
+   token,
+   type:'email'
+  });
+  if(error)throw error;
+  if(!data?.session)throw new Error('Supabase did not return a signed-in session.');
+  cloudUser=data.user||data.session.user;
+  showCloudUser(cloudUser);
+  document.getElementById('cloudEmailCode').value='';
+  setCloudStatus('Signed in. Checking cloud backup…','busy');
+  await reconcileCloudBackup();
+ }catch(error){
+  console.error(error);
+  setCloudStatus('Code verification failed.','error');
+  alert(error.message||'The code was invalid or expired.');
+ }finally{
+  if(button){button.disabled=false;button.textContent='Verify code and sign in'}
+ }
+}
 async function cloudSignOut(){
  if(!supabaseClient)return;
  clearTimeout(cloudSyncTimer);
@@ -1221,5 +1257,5 @@ if(localStorage.getItem('mp_last_version')!==APP_VERSION){
  nativeStorageSetItem.call(localStorage,'mp_last_version',APP_VERSION);
 }
 renderAll();drawChart();initCloudSync();setTimeout(()=>{const e=document.getElementById('walkDate');if(e&&!e.value)e.value=new Date().toISOString().slice(0,10)},0);if('serviceWorker'in navigator){
- navigator.serviceWorker.register('sw.js?v=59').then(reg=>reg.update()).catch(console.error);
+ navigator.serviceWorker.register('sw.js?v=60').then(reg=>reg.update()).catch(console.error);
 }

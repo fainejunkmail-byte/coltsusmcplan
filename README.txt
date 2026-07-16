@@ -147,3 +147,9 @@ Version 5.9:
 - Added date selectors to progress and individual strength exercise logs.
 - Running and test-day dates now load matching entries directly.
 - Unused dates clear the form for new data; loaded dates update the existing record.
+
+Version 6.0:
+- Replaced email magic-link authentication with an email one-time-code flow.
+- The user stays inside the pinned Home Screen app and types the emailed code directly.
+- Avoids Safari opening the link and creating the session in the wrong browser context.
+- Existing Supabase cloud backups and accounts remain compatible.
