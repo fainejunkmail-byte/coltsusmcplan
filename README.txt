@@ -218,3 +218,10 @@ Version 6.7.3:
 - Renames it to Progress week while an alternate mode is active.
 - Switching the selector immediately opens that mode's separate progress record for the chosen Year 1 week.
 - Adds clearer text explaining that alternate-mode progress is stored separately by week.
+
+Version 6.7.4:
+- Makes Retry cloud connection permanently visible in Cloud Backup.
+- Allows manual Supabase session initialization while signed in or signed out.
+- Shows Connecting… and disables repeated taps during a connection attempt.
+- Restores the retry button automatically when the attempt finishes.
+- Manual retry does not erase or overwrite local training data.

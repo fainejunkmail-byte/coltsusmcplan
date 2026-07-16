@@ -7,7 +7,7 @@ let activeExerciseLogName=null;
 let trainingMode=localStorage.getItem('trainingMode')||'normal';
 
 
-const APP_VERSION='6.7.3';
+const APP_VERSION='6.7.4';
 const SUPABASE_URL='https://ewzmwoepcukxxeabimsy.supabase.co';
 const SUPABASE_PUBLISHABLE_KEY='sb_publishable_itOe_-3RBRY_6rlZ60LRWw_B02V7f3T';
 
@@ -28,10 +28,25 @@ function withTimeout(promise,ms,label='Operation'){
 function setCloudDiagnostic(message=''){
  const el=document.getElementById('cloudDiagnostic');if(el)el.textContent=message;
 }
-function showCloudRetry(show=true){document.getElementById('cloudRetryButton')?.classList.toggle('hidden',!show)}
+function showCloudRetry(show=true){
+ const button=document.getElementById('cloudRetryButton');
+ if(button)button.classList.remove('hidden');
+}
+function setCloudRetryBusy(busy){
+ const button=document.getElementById('cloudRetryButton');
+ if(!button)return;
+ button.disabled=!!busy;
+ button.textContent=busy?'Connecting…':'Retry cloud connection';
+}
 async function retryCloudSync(){
- showCloudRetry(false);setCloudDiagnostic('Retrying connection…');
- await initCloudSync(true);
+ if(document.getElementById('cloudRetryButton')?.disabled)return;
+ setCloudRetryBusy(true);
+ setCloudDiagnostic('Retrying connection…');
+ try{
+  await initCloudSync(true);
+ }finally{
+  setCloudRetryBusy(false);
+ }
 }
 
 function isAppDataKey(key){
@@ -110,7 +125,8 @@ Storage.prototype.setItem=function(key,value){
 async function initCloudSync(forceRetry=false){
  cloudInitAttempt++;
  const attempt=cloudInitAttempt;
- showCloudRetry(false);
+ showCloudRetry(true);
+ if(forceRetry)setCloudRetryBusy(true);
  setCloudDiagnostic('Connection attempt '+attempt+'…');
  if(!navigator.onLine){
   setCloudStatus('Offline. Data is saved locally.','busy');
@@ -144,6 +160,7 @@ async function initCloudSync(forceRetry=false){
   setCloudDiagnostic(error.message||'Unknown cloud connection error.');
   showCloudRetry(true);
  }
+ setCloudRetryBusy(false);
 }
 async function handleCloudSession(session){
  cloudUser=session?.user||null;
@@ -1687,7 +1704,7 @@ if(localStorage.getItem('mp_last_version')!==APP_VERSION){
 window.addEventListener('online',()=>{setCloudDiagnostic('Internet connection restored.');retryCloudSync()});
 window.addEventListener('offline',()=>{setCloudStatus('Offline. Data is saved locally.','busy');setCloudDiagnostic('Cloud sync will resume when internet returns.');showCloudRetry(true)});
 renderAll();drawChart();initCloudSync();setTimeout(()=>{const e=document.getElementById('walkDate');if(e&&!e.value)e.value=new Date().toISOString().slice(0,10)},0);if('serviceWorker'in navigator){
- navigator.serviceWorker.register('sw.js?v=673').then(reg=>reg.update()).catch(console.error);
+ navigator.serviceWorker.register('sw.js?v=674').then(reg=>reg.update()).catch(console.error);
 }
 
 
