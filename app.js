@@ -7,7 +7,7 @@ let activeExerciseLogName=null;
 let trainingMode=localStorage.getItem('trainingMode')||'normal';
 
 
-const APP_VERSION='4.4';
+const APP_VERSION='4.5';
 const SUPABASE_URL='https://ewzmwoepcukxxeabimsy.supabase.co';
 const SUPABASE_PUBLISHABLE_KEY='sb_publishable_itOe_-3RBRY_6rlZ60LRWw_B02V7f3T';
 
@@ -128,28 +128,35 @@ async function handleCloudSession(session){
 
 async function sendMagicLink(){
  const email=(document.getElementById('cloudEmail')?.value||'').trim();
+ const button=document.getElementById('cloudEmailButton');
  if(!email || !email.includes('@')){
+  setCloudStatus('Enter a valid email address.','error');
   alert('Enter a valid email address.');
   return;
  }
  if(!supabaseClient){
-  alert('Cloud sign-in is still loading. Try again in a moment.');
+  setCloudStatus('Cloud sign-in has not finished loading. Reload the page and try again.','error');
+  alert('Cloud sign-in has not finished loading. Reload the page and try again.');
   return;
  }
- setCloudStatus('Sending sign-in email…','busy');
- const redirectTo=window.location.origin+window.location.pathname;
- const {error}=await supabaseClient.auth.signInWithOtp({
-  email,
-  options:{emailRedirectTo:redirectTo,shouldCreateUser:true}
- });
- if(error){
+ if(button){button.disabled=true;button.textContent='Sending…'}
+ try{
+  setCloudStatus('Sending sign-in email…','busy');
+  const redirectTo=window.location.origin+window.location.pathname;
+  const {error}=await supabaseClient.auth.signInWithOtp({
+   email,
+   options:{emailRedirectTo:redirectTo,shouldCreateUser:true}
+  });
+  if(error)throw error;
+  setCloudStatus('Email sent. Check Inbox and Spam, then open the link on this device.','ok');
+  alert('Sign-in email sent. Check Inbox and Spam, then open the link on this device.');
+ }catch(error){
   console.error(error);
-  setCloudStatus('Could not send the sign-in email.','error');
+  setCloudStatus('Email could not be sent: '+(error.message||'unknown error'),'error');
   alert(error.message||'The sign-in email could not be sent.');
-  return;
+ }finally{
+  if(button){button.disabled=false;button.textContent='Email me a sign-in link'}
  }
- setCloudStatus('Sign-in email sent. Open it on this device.','ok');
- alert('Sign-in link sent. Open the email on this device and tap the link.');
 }
 
 async function cloudSignOut(){
@@ -905,4 +912,6 @@ function renderAll(){
  document.querySelectorAll('.modeSelect').forEach(s=>s.value=trainingMode);
  renderWeek();renderDashboard();renderStrengthLibrary();renderCalendar();renderSwimGates();renderSupplements();if(!document.getElementById('stats').classList.contains('hidden'))renderStats()
 }
-renderAll();drawChart();initCloudSync();if('serviceWorker'in navigator)navigator.serviceWorker.register('sw.js');
+renderAll();drawChart();initCloudSync();if('serviceWorker'in navigator){
+ navigator.serviceWorker.register('sw.js?v=45').then(reg=>reg.update()).catch(console.error);
+}

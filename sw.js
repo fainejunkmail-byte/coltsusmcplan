@@ -1,1 +1,63 @@
-const CACHE='marine-prep-pro-v4-4';const ASSETS=['./','./index.html','./app.js','./manifest.json','./icon.svg'];self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS))));self.addEventListener('fetch',e=>e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request))));
+const CACHE='marine-prep-pro-v4-5';
+const CORE=[
+ './',
+ './index.html',
+ './app.js?v=45',
+ './manifest.json?v=45',
+ './icon.svg?v=45'
+];
+
+self.addEventListener('install',event=>{
+ event.waitUntil(
+  caches.open(CACHE).then(cache=>cache.addAll(CORE)).then(()=>self.skipWaiting())
+ );
+});
+
+self.addEventListener('activate',event=>{
+ event.waitUntil(
+  caches.keys()
+   .then(keys=>Promise.all(keys.filter(key=>key!==CACHE).map(key=>caches.delete(key))))
+   .then(()=>self.clients.claim())
+ );
+});
+
+self.addEventListener('fetch',event=>{
+ const request=event.request;
+ if(request.method!=='GET')return;
+
+ const url=new URL(request.url);
+
+ // Never cache Supabase/CDN/API requests.
+ if(url.origin!==self.location.origin){
+  event.respondWith(fetch(request));
+  return;
+ }
+
+ // HTML/navigation: network first, then offline fallback.
+ if(request.mode==='navigate'){
+  event.respondWith(
+   fetch(request)
+    .then(response=>{
+     const copy=response.clone();
+     caches.open(CACHE).then(cache=>cache.put('./index.html',copy));
+     return response;
+    })
+    .catch(()=>caches.match('./index.html'))
+  );
+  return;
+ }
+
+ // Versioned local assets are safe to cache first.
+ event.respondWith(
+  caches.match(request).then(cached=>{
+   if(cached)return cached;
+   return fetch(request).then(response=>{
+    if(response && response.ok){
+     const copy=response.clone();
+     caches.open(CACHE).then(cache=>cache.put(request,copy));
+    }
+    return response;
+   });
+  })
+ );
+});

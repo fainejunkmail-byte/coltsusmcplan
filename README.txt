@@ -76,3 +76,10 @@ Version 4.4:
 - Local storage remains the offline source of truth.
 - Added conflict protection so a blank or older installation does not silently overwrite a newer cloud backup.
 - Added visible sync state and last-cloud-save time.
+
+Version 4.5:
+- Fixed mixed-version caching where v4.4 HTML could load with the old v4.3 app.js.
+- Added versioned asset URLs.
+- Added immediate service-worker activation and removal of old caches.
+- Changed page navigation to network-first updates.
+- Added clear success/error messages and a Sending state for email sign-in.
