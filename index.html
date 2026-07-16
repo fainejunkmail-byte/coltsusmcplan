@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#07111f">
-<title>Marine Prep Pro v5.4</title>
-<link rel="manifest" href="manifest.json?v=54">
+<title>Marine Prep Pro v5.5</title>
+<link rel="manifest" href="manifest.json?v=55">
 <style>
 :root{--bg:#07111f;--panel:#0e1b2e;--panel2:#13243a;--line:#243a56;--text:#f3f7fc;--muted:#9db0c8;--green:#4ade80;--yellow:#fbbf24;--red:#fb7185;--blue:#60a5fa;--safe:env(safe-area-inset-bottom)}
 *{box-sizing:border-box}body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:linear-gradient(180deg,#06101d,#0a1525 45%,#07111f);color:var(--text);min-height:100vh}
@@ -110,10 +110,12 @@ body.light .menuItem span,body.light .appMenu .small,body.light .appMenu .muted{
 .ghost{color:var(--text)}
 body.light .ghost{color:var(--text)}
 
+
+.nav{grid-template-columns:repeat(4,1fr)}
 </style>
 </head>
 <body>
-<div class="top"><div class="brand"><h1>Marine Prep Pro <span class="versionMark">v5.4</span></h1><span class="badge">YEAR 1</span>
+<div class="top"><div class="brand"><h1>Marine Prep Pro <span class="versionMark">v5.5</span></h1><span class="badge">YEAR 1</span>
 <button class="menuButton" aria-label="Open menu" onclick="toggleAppMenu(event)">
  <span></span><span></span><span></span>
 </button></div></div>
@@ -124,8 +126,9 @@ body.light .ghost{color:var(--text)}
   <div><h3>Marine Prep</h3><div class="small muted">Quick menu</div></div>
   <button class="ghost" onclick="closeAppMenu()">Close</button>
  </div>
- <button class="menuItem" onclick="openTools('progress')"><strong>Tools & Progress</strong><span>Logs, tests, planning, recovery, and more</span></button>
+ <button class="menuItem" onclick="openTools('command')"><strong>Command tools</strong><span>Planning, recovery, tests, reminders, and records</span></button>
  <button class="menuItem" onclick="switchTab('stats');closeAppMenu()"><strong>Statistics</strong><span>Readiness and progress charts</span></button>
+ <button class="menuItem" onclick="switchTab('strength');closeAppMenu()"><strong>Strength library</strong><span>Strength sessions, exercises, and demonstrations</span></button>
  <button class="menuItem" onclick="toggleTheme();closeAppMenu()"><strong>Appearance</strong><span>Switch light or dark mode</span></button>
  <button class="menuItem" onclick="scrollToCloudBackup()"><strong>Cloud backup</strong><span>Account, sync, and restore controls</span></button>
 </aside>
@@ -273,12 +276,12 @@ body.light .ghost{color:var(--text)}
 <section id="tools" 
  <div class="card hero">
   <div class="row between">
-   <div><h2>Tools & Progress</h2><p class="small muted">Logs, assessments, planning, recovery, records, and personalization.</p></div>
+   <div><h2>Logs & Command</h2><p class="small muted">Fast progress logging plus the full command toolkit.</p></div>
    <button class="ghost" onclick="toggleAppMenu(event)">Menu</button>
   </div>
   <div class="toolTabs">
-   <button id="toolTabProgress" class="active" onclick="showToolPanel('progress')" style="font-weight:800">Progress log</button>
-   <button id="toolTabCommand" onclick="showToolPanel('command')" style="color:var(--text);font-weight:800">Command tools</button>
+   <button id="toolTabProgress" class="active" onclick="showToolPanel('progress')" style="font-weight:800">Logs</button>
+   <button id="toolTabCommand" onclick="showToolPanel('command')" style="color:var(--text);font-weight:800">Command</button>
   </div>
  </div>
  <div id="toolPanelProgress"> 
@@ -408,9 +411,8 @@ body.light .ghost{color:var(--text)}
 <div class="nav">
 <button class="active" data-tab="dashboard" onclick="switchTab('dashboard')"><span class="icon">⌂</span>Home</button>
 <button data-tab="week" onclick="switchTab('week')"><span class="icon">✓</span>Week</button>
-<button data-tab="strength" onclick="switchTab('strength')"><span class="icon">▤</span>Strength</button>
 <button data-tab="calendar" onclick="switchTab('calendar')"><span class="icon">▦</span>Calendar</button>
-<button data-tab="stats" onclick="switchTab('stats')"><span class="icon">◎</span>Stats</button>
+<button data-tab="tools" onclick="openTools('progress')"><span class="icon">↗</span>Logs</button>
 </div>
 
 <div id="demoModal" class="modal hidden" onclick="closeOnBackdrop(event,'demoModal')"><div class="sheet">
@@ -505,5 +507,5 @@ body.light .ghost{color:var(--text)}
 <div id="timerModal" class="modal hidden" onclick="closeOnBackdrop(event,'timerModal')"><div class="sheet"><div class="row between"><h2>Workout timer</h2><button class="ghost" onclick="closeModal('timerModal')">Close</button></div><div class="timer" id="timerText">00:00</div><div class="timerBtns"><button onclick="timerStart()">Start</button><button class="secondary" onclick="timerPause()">Pause</button><button class="warn" onclick="timerReset()">Reset</button></div><div class="grid" style="margin-top:14px"><button class="ghost" onclick="setTimer(30)">30 sec</button><button class="ghost" onclick="setTimer(60)">1 min</button><button class="ghost" onclick="setTimer(90)">90 sec</button><button class="ghost" onclick="setTimer(120)">2 min</button><button class="ghost" onclick="setTimer(300)">5 min</button><button class="ghost" onclick="setTimer(600)">10 min</button></div></div></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="app.js?v=54"></script>
+<script src="app.js?v=55"></script>
 </body></html>

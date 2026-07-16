@@ -120,3 +120,8 @@ Version 5.3:
 Version 5.4:
 - Fixed unreadable header and description text colors in the three-line slide-out menu.
 - Ensured menu buttons, titles, and supporting text stay readable in dark and light themes.
+
+Version 5.5:
+- Bottom bar now contains Home, Week, Calendar, and Logs.
+- Moved Statistics and Strength Library into the three-line menu.
+- Command tools remain in the three-line menu.
