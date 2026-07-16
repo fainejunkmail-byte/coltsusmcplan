@@ -1,10 +1,10 @@
-const CACHE='marine-prep-pro-v4-5';
+const CACHE='marine-prep-pro-v4-6';
 const CORE=[
  './',
  './index.html',
- './app.js?v=45',
- './manifest.json?v=45',
- './icon.svg?v=45'
+ './app.js?v=46',
+ './manifest.json?v=46',
+ './icon.svg?v=46'
 ];
 
 self.addEventListener('install',event=>{
@@ -24,16 +24,13 @@ self.addEventListener('activate',event=>{
 self.addEventListener('fetch',event=>{
  const request=event.request;
  if(request.method!=='GET')return;
-
  const url=new URL(request.url);
 
- // Never cache Supabase/CDN/API requests.
  if(url.origin!==self.location.origin){
   event.respondWith(fetch(request));
   return;
  }
 
- // HTML/navigation: network first, then offline fallback.
  if(request.mode==='navigate'){
   event.respondWith(
    fetch(request)
@@ -47,7 +44,6 @@ self.addEventListener('fetch',event=>{
   return;
  }
 
- // Versioned local assets are safe to cache first.
  event.respondWith(
   caches.match(request).then(cached=>{
    if(cached)return cached;

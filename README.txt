@@ -83,3 +83,9 @@ Version 4.5:
 - Added immediate service-worker activation and removal of old caches.
 - Changed page navigation to network-first updates.
 - Added clear success/error messages and a Sending state for email sign-in.
+
+Version 4.6:
+- Readiness categories now begin at a true 0%.
+- Categories only gain readiness from saved evidence for that category.
+- No starting bonus or assumed readiness is awarded.
+- Monday and other completed workouts remain user data and are expected to restore through cloud sync after updating.

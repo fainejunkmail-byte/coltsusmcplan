@@ -7,7 +7,7 @@ let activeExerciseLogName=null;
 let trainingMode=localStorage.getItem('trainingMode')||'normal';
 
 
-const APP_VERSION='4.5';
+const APP_VERSION='4.6';
 const SUPABASE_URL='https://ewzmwoepcukxxeabimsy.supabase.co';
 const SUPABASE_PUBLISHABLE_KEY='sb_publishable_itOe_-3RBRY_6rlZ60LRWw_B02V7f3T';
 
@@ -572,15 +572,76 @@ function readinessExplanation(category,score,latest,weekState){
 }
 
 function readiness(){
- let hist=progressHistory(),latest=hist[hist.length-1]||{};
- let completed=0;for(let w=1;w<=currentWeek;w++){let normalState=JSON.parse(localStorage.getItem('mp_week_'+w)||'{}');completed+=DAYS.filter(d=>normalState[d]).length;}
- let consistency=Math.min(100,Math.round(completed/Math.max(1,currentWeek*5)*100));
- let strength=Math.min(100,Math.round(((+latest.pushups||0)/60*.45+(+latest.pullups||0)/20*.35+(+latest.plank||0)/240*.2)*100));
- let endurance=20;if(latest.run3){let parts=latest.run3.split(':').map(Number);let sec=(parts[0]||0)*60+(parts[1]||0);endurance=Math.max(0,Math.min(100,Math.round((2400-sec)/(2400-1080)*100)))}
- let swimming=Math.min(100,Math.round(((+latest.swimdist||0)/800*.65+(+latest.tread||0)/15*.35)*100));
- let rucking=Math.min(100,Math.round(((+latest.ruckdist||0)/6*.55+(+latest.ruckwt||0)/25*.45)*100));
- let st=getWeekState(currentWeek), recovery=Math.max(0,Math.min(100,Math.round(((+st.sleep||7)/8*.7+(10-(+st.pain||0))/10*.3)*100)));
- return{consistency,strength,endurance,swimming,rucking,recovery}
+ const h=progressHistory(),latest=h[h.length-1]||{};
+ const weekState=JSON.parse(localStorage.getItem('mp_week_'+currentWeek)||'{}');
+
+ const completed=countCompletedDays();
+ const completeWeeks=completedWeeks();
+
+ const push=+latest.pushups||0;
+ const pull=+latest.pullups||0;
+ const plank=+latest.plank||0;
+
+ const swim=+latest.swimdist||0;
+ const tread=+latest.tread||0;
+
+ const ruckDist=+latest.ruckdist||0;
+ const ruckWt=+latest.ruckwt||0;
+
+ const sleepRaw=weekState.sleep;
+ const painRaw=weekState.pain;
+ const sleep=sleepRaw===''||sleepRaw==null?null:+sleepRaw;
+ const pain=painRaw===''||painRaw==null?null:+painRaw;
+
+ let runSec=0;
+ const run3=latest.run3||'';
+ if(run3&&run3.includes(':')){
+  const p=run3.split(':').map(Number);
+  runSec=(p[0]||0)*60+(p[1]||0);
+ }
+
+ // Every category begins at 0 and only gains points from actual saved evidence.
+ const consistency=Math.min(100,Math.round(
+  Math.min(70,completed*3.5)+Math.min(30,completeWeeks*10)
+ ));
+
+ let strength=0;
+ if(push>0)strength+=Math.min(34,Math.round((push/60)*34));
+ if(pull>0)strength+=Math.min(33,Math.round((pull/15)*33));
+ if(plank>0)strength+=Math.min(33,Math.round((plank/240)*33));
+ strength=Math.min(100,strength);
+
+ let endurance=0;
+ if(runSec>0){
+  // 45:00 = 1%, 30:00 ≈ 56%, 25:00 ≈ 74%, 18:00 = 100%.
+  endurance=Math.max(1,Math.min(100,Math.round(((2700-runSec)/(2700-1080))*100)));
+ }
+
+ let swimming=0;
+ if(swim>0)swimming+=Math.min(60,Math.round((swim/800)*60));
+ if(tread>0)swimming+=Math.min(40,Math.round((tread/15)*40));
+ swimming=Math.min(100,swimming);
+
+ let rucking=0;
+ if(ruckDist>0)rucking+=Math.min(65,Math.round((ruckDist/6)*65));
+ if(ruckWt>0)rucking+=Math.min(35,Math.round((ruckWt/25)*35));
+ rucking=Math.min(100,rucking);
+
+ let recovery=0;
+ let recoveryInputs=0;
+ if(sleep!==null && !Number.isNaN(sleep)){
+  recoveryInputs++;
+  recovery+=Math.max(0,Math.min(50,Math.round((sleep/8)*50)));
+ }
+ if(pain!==null && !Number.isNaN(pain)){
+  recoveryInputs++;
+  recovery+=Math.max(0,Math.min(50,Math.round(((10-pain)/10)*50)));
+ }
+ if(recoveryInputs===1)recovery=Math.min(50,recovery);
+ recovery=Math.min(100,recovery);
+
+ const scores={consistency,strength,endurance,swimming,rucking,recovery};
+ return scores;
 }
 function renderAchievements(){
  const h=progressHistory(),l=h[h.length-1]||{},logs=exerciseLogs();
@@ -913,5 +974,5 @@ function renderAll(){
  renderWeek();renderDashboard();renderStrengthLibrary();renderCalendar();renderSwimGates();renderSupplements();if(!document.getElementById('stats').classList.contains('hidden'))renderStats()
 }
 renderAll();drawChart();initCloudSync();if('serviceWorker'in navigator){
- navigator.serviceWorker.register('sw.js?v=45').then(reg=>reg.update()).catch(console.error);
+ navigator.serviceWorker.register('sw.js?v=46').then(reg=>reg.update()).catch(console.error);
 }
