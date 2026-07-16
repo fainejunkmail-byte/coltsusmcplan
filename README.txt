@@ -68,3 +68,11 @@ Version 4.3:
 - Hotel Week uses quiet, low-space joint armor, posture, mobility, and lower-body maintenance.
 - Normal sightseeing and travel walking counts as the main conditioning.
 - Push-ups and other conspicuous floor work are not required.
+
+Version 4.4:
+- Added Supabase email magic-link sign-in.
+- Added automatic cloud backup to the app_backups table.
+- Added manual Back up this device, Restore cloud backup, and Sign out controls.
+- Local storage remains the offline source of truth.
+- Added conflict protection so a blank or older installation does not silently overwrite a newer cloud backup.
+- Added visible sync state and last-cloud-save time.

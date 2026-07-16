@@ -7,6 +7,293 @@ let activeExerciseLogName=null;
 let trainingMode=localStorage.getItem('trainingMode')||'normal';
 
 
+const APP_VERSION='4.4';
+const SUPABASE_URL='https://ewzmwoepcukxxeabimsy.supabase.co';
+const SUPABASE_PUBLISHABLE_KEY='sb_publishable_itOe_-3RBRY_6rlZ60LRWw_B02V7f3T';
+
+let supabaseClient=null;
+let cloudUser=null;
+let cloudSyncTimer=null;
+let cloudApplying=false;
+let cloudAutoSyncReady=false;
+let latestCloudRow=null;
+
+function isAppDataKey(key){
+ return key.startsWith('mp_') || key==='currentWeek' || key==='trainingMode';
+}
+
+function buildBackupSnapshot(){
+ const storage={};
+ for(let i=0;i<localStorage.length;i++){
+  const key=localStorage.key(i);
+  if(isAppDataKey(key))storage[key]=localStorage.getItem(key);
+ }
+ return {
+  version:APP_VERSION,
+  saved_at:new Date().toISOString(),
+  storage
+ };
+}
+
+function meaningfulBackupCount(snapshot){
+ if(!snapshot || !snapshot.storage)return 0;
+ return Object.entries(snapshot.storage).filter(([key,value])=>{
+  if(key==='currentWeek'||key==='trainingMode'||key==='mp_readiness_history')return false;
+  if(value==null||value===''||value==='{}'||value==='[]')return false;
+  if(key.startsWith('mp_week_')||key.startsWith('mp_mode_')){
+   try{
+    const parsed=JSON.parse(value);
+    return Object.values(parsed).some(v=>v!==''&&v!==false&&v!=null);
+   }catch{return true}
+  }
+  return true;
+ }).length;
+}
+
+function setCloudStatus(message,state=''){
+ const status=document.getElementById('cloudStatus');
+ const dot=document.getElementById('cloudDot');
+ if(status)status.textContent=message;
+ if(dot)dot.className='syncDot'+(state?' '+state:'');
+}
+
+function showCloudUser(user){
+ const signedOut=document.getElementById('cloudSignedOut');
+ const signedIn=document.getElementById('cloudSignedIn');
+ if(!signedOut||!signedIn)return;
+ signedOut.classList.toggle('hidden',!!user);
+ signedIn.classList.toggle('hidden',!user);
+ if(user)document.getElementById('cloudUserEmail').textContent=user.email||'Signed-in account';
+}
+
+function setLastSync(value){
+ const el=document.getElementById('cloudLastSync');
+ if(!el)return;
+ if(!value){el.textContent='Not synced yet';return}
+ const date=new Date(value);
+ el.textContent='Last cloud save: '+(isNaN(date)?value:date.toLocaleString());
+}
+
+function scheduleCloudSync(){
+ if(cloudApplying||!cloudUser||!cloudAutoSyncReady)return;
+ clearTimeout(cloudSyncTimer);
+ setCloudStatus('Changes saved locally. Cloud sync pending…','busy');
+ cloudSyncTimer=setTimeout(()=>cloudUpload(true),1800);
+}
+
+/* Watch all Marine Prep local-storage changes without interfering with Supabase auth storage. */
+const nativeStorageSetItem=Storage.prototype.setItem;
+Storage.prototype.setItem=function(key,value){
+ nativeStorageSetItem.call(this,key,value);
+ if(this===localStorage && isAppDataKey(String(key)) && !cloudApplying){
+  nativeStorageSetItem.call(localStorage,'mpp_local_updated_at',new Date().toISOString());
+  scheduleCloudSync();
+ }
+};
+
+async function initCloudSync(){
+ if(!window.supabase || !window.supabase.createClient){
+  setCloudStatus('Cloud library could not load. Local saves still work.','error');
+  return;
+ }
+ try{
+  supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY,{
+   auth:{persistSession:true,detectSessionInUrl:true,autoRefreshToken:true}
+  });
+  const {data,error}=await supabaseClient.auth.getSession();
+  if(error)throw error;
+  await handleCloudSession(data.session);
+  supabaseClient.auth.onAuthStateChange((_event,session)=>{
+   setTimeout(()=>handleCloudSession(session),0);
+  });
+ }catch(error){
+  console.error(error);
+  setCloudStatus('Cloud setup error. Local saves still work.','error');
+ }
+}
+
+async function handleCloudSession(session){
+ cloudUser=session?.user||null;
+ cloudAutoSyncReady=false;
+ latestCloudRow=null;
+ showCloudUser(cloudUser);
+ if(!cloudUser){
+  setCloudStatus('Not signed in. Data is saved only on this device.');
+  setLastSync(null);
+  return;
+ }
+ setCloudStatus('Checking your cloud backup…','busy');
+ await reconcileCloudBackup();
+}
+
+async function sendMagicLink(){
+ const email=(document.getElementById('cloudEmail')?.value||'').trim();
+ if(!email || !email.includes('@')){
+  alert('Enter a valid email address.');
+  return;
+ }
+ if(!supabaseClient){
+  alert('Cloud sign-in is still loading. Try again in a moment.');
+  return;
+ }
+ setCloudStatus('Sending sign-in email…','busy');
+ const redirectTo=window.location.origin+window.location.pathname;
+ const {error}=await supabaseClient.auth.signInWithOtp({
+  email,
+  options:{emailRedirectTo:redirectTo,shouldCreateUser:true}
+ });
+ if(error){
+  console.error(error);
+  setCloudStatus('Could not send the sign-in email.','error');
+  alert(error.message||'The sign-in email could not be sent.');
+  return;
+ }
+ setCloudStatus('Sign-in email sent. Open it on this device.','ok');
+ alert('Sign-in link sent. Open the email on this device and tap the link.');
+}
+
+async function cloudSignOut(){
+ if(!supabaseClient)return;
+ clearTimeout(cloudSyncTimer);
+ cloudAutoSyncReady=false;
+ const {error}=await supabaseClient.auth.signOut();
+ if(error)alert(error.message);
+}
+
+async function fetchCloudBackup(){
+ const {data,error}=await supabaseClient
+  .from('app_backups')
+  .select('backup_data,app_version,updated_at')
+  .eq('user_id',cloudUser.id)
+  .maybeSingle();
+ if(error)throw error;
+ latestCloudRow=data||null;
+ return latestCloudRow;
+}
+
+async function reconcileCloudBackup(){
+ try{
+  const row=await fetchCloudBackup();
+  const local=buildBackupSnapshot();
+  const localCount=meaningfulBackupCount(local);
+  const cloudCount=meaningfulBackupCount(row?.backup_data);
+
+  if(!row){
+   setCloudStatus('Creating your first cloud backup…','busy');
+   cloudAutoSyncReady=true;
+   await cloudUpload(true);
+   return;
+  }
+
+  setLastSync(row.updated_at);
+  const localUpdated=Date.parse(localStorage.getItem('mpp_local_updated_at')||'')||0;
+  const cloudUpdated=Date.parse(row.updated_at||row.backup_data?.saved_at||'')||0;
+
+  if(localCount===0 && cloudCount>0){
+   await applyCloudBackup(row.backup_data,false);
+   return;
+  }
+
+  if(cloudCount>0 && cloudUpdated>localUpdated+5000){
+   cloudAutoSyncReady=false;
+   setCloudStatus('A newer cloud backup is available. Choose Restore or Back up this device.','busy');
+   return;
+  }
+
+  cloudAutoSyncReady=true;
+  setCloudStatus('Signed in and synced.','ok');
+  if(localCount>0 && localUpdated>cloudUpdated+5000)await cloudUpload(true);
+ }catch(error){
+  console.error(error);
+  setCloudStatus('Could not check the cloud backup. Local saves still work.','error');
+ }
+}
+
+async function cloudUpload(silent=false){
+ if(!cloudUser||!supabaseClient){
+  if(!silent)alert('Sign in before backing up.');
+  return;
+ }
+ try{
+  clearTimeout(cloudSyncTimer);
+  setCloudStatus('Saving to cloud…','busy');
+  const snapshot=buildBackupSnapshot();
+  const {data,error}=await supabaseClient
+   .from('app_backups')
+   .upsert({
+    user_id:cloudUser.id,
+    backup_data:snapshot,
+    app_version:APP_VERSION,
+    updated_at:snapshot.saved_at
+   },{onConflict:'user_id'})
+   .select('updated_at')
+   .single();
+  if(error)throw error;
+  latestCloudRow={backup_data:snapshot,app_version:APP_VERSION,updated_at:data.updated_at};
+  nativeStorageSetItem.call(localStorage,'mpp_local_updated_at',data.updated_at);
+  cloudAutoSyncReady=true;
+  setLastSync(data.updated_at);
+  setCloudStatus('Saved to cloud.','ok');
+  if(!silent)alert('This device’s training data is backed up.');
+ }catch(error){
+  console.error(error);
+  setCloudStatus('Cloud save failed. Data remains saved locally.','error');
+  if(!silent)alert(error.message||'Cloud save failed.');
+ }
+}
+
+async function cloudRestore(confirmFirst=true){
+ if(!cloudUser||!supabaseClient){
+  alert('Sign in before restoring.');
+  return;
+ }
+ try{
+  setCloudStatus('Loading cloud backup…','busy');
+  const row=await fetchCloudBackup();
+  if(!row?.backup_data?.storage){
+   setCloudStatus('No cloud backup exists yet.','error');
+   alert('No cloud backup was found for this account.');
+   return;
+  }
+  if(confirmFirst && !confirm('Replace this device’s Marine Prep data with the cloud backup?')){
+   setCloudStatus('Restore cancelled.');
+   return;
+  }
+  await applyCloudBackup(row.backup_data,false);
+ }catch(error){
+  console.error(error);
+  setCloudStatus('Cloud restore failed.','error');
+  alert(error.message||'Cloud restore failed.');
+ }
+}
+
+async function applyCloudBackup(backup,confirmFirst=false){
+ if(confirmFirst && !confirm('Replace this device’s Marine Prep data with the cloud backup?'))return;
+ cloudApplying=true;
+ try{
+  const remove=[];
+  for(let i=0;i<localStorage.length;i++){
+   const key=localStorage.key(i);
+   if(isAppDataKey(key))remove.push(key);
+  }
+  remove.forEach(key=>localStorage.removeItem(key));
+  Object.entries(backup.storage||{}).forEach(([key,value])=>{
+   if(isAppDataKey(key))nativeStorageSetItem.call(localStorage,key,value);
+  });
+  nativeStorageSetItem.call(localStorage,'mpp_local_updated_at',backup.saved_at||new Date().toISOString());
+  currentWeek=Number(localStorage.getItem('currentWeek')||1);
+  trainingMode=localStorage.getItem('trainingMode')||'normal';
+  cloudAutoSyncReady=true;
+  renderAll();
+  setLastSync(latestCloudRow?.updated_at||backup.saved_at);
+  setCloudStatus('Cloud backup restored.','ok');
+  alert('Cloud backup restored to this device.');
+ }finally{
+  cloudApplying=false;
+ }
+}
+
+
 function modeKey(){return trainingMode==='normal'?'normal_'+currentWeek:trainingMode}
 function activePlan(){
  if(trainingMode==='normal')return DATA.weeks[currentWeek];
@@ -574,7 +861,7 @@ function saveShipDate(){
 }
 function showProgressionGuide(){document.getElementById('guideModal').classList.remove('hidden')}
 function exportBackup(){
- const backup={version:4,exported:new Date().toISOString(),storage:{}};
+ const backup={version:APP_VERSION,exported:new Date().toISOString(),storage:{}};
  for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k.startsWith('mp_')||['currentWeek','trainingMode'].includes(k))backup.storage[k]=localStorage.getItem(k)}
  const blob=new Blob([JSON.stringify(backup,null,2)],{type:'application/json'});
  const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='marine-prep-backup-'+new Date().toISOString().slice(0,10)+'.json';a.click();URL.revokeObjectURL(url);
@@ -618,4 +905,4 @@ function renderAll(){
  document.querySelectorAll('.modeSelect').forEach(s=>s.value=trainingMode);
  renderWeek();renderDashboard();renderStrengthLibrary();renderCalendar();renderSwimGates();renderSupplements();if(!document.getElementById('stats').classList.contains('hidden'))renderStats()
 }
-renderAll();drawChart();if('serviceWorker'in navigator)navigator.serviceWorker.register('sw.js');
+renderAll();drawChart();initCloudSync();if('serviceWorker'in navigator)navigator.serviceWorker.register('sw.js');
