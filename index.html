@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#07111f">
-<title>Marine Prep Pro v5.2</title>
-<link rel="manifest" href="manifest.json?v=52">
+<title>Marine Prep Pro v5.4</title>
+<link rel="manifest" href="manifest.json?v=54">
 <style>
 :root{--bg:#07111f;--panel:#0e1b2e;--panel2:#13243a;--line:#243a56;--text:#f3f7fc;--muted:#9db0c8;--green:#4ade80;--yellow:#fbbf24;--red:#fb7185;--blue:#60a5fa;--safe:env(safe-area-inset-bottom)}
 *{box-sizing:border-box}body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:linear-gradient(180deg,#06101d,#0a1525 45%,#07111f);color:var(--text);min-height:100vh}
@@ -92,10 +92,28 @@ body.light .top,body.light .nav{background:rgba(255,255,255,.96)}
 .toolTabs button{background:var(--panel2);border:1px solid var(--line)}
 .toolTabs button.active{background:var(--accent);color:white;border-color:var(--accent)}
 
+
+.toolTabs button{color:var(--text)!important;font-weight:800}
+.toolTabs button:not(.active){background:var(--panel2);color:var(--text)!important;opacity:1}
+.toolTabs button.active{background:var(--accent);color:#fff!important}
+body.light .toolTabs button:not(.active){color:var(--text)!important}
+.menuButton,.toolTabs button{ -webkit-tap-highlight-color: transparent; }
+
+
+.appMenu h3{color:var(--text)!important}
+.appMenu .small,.appMenu .muted{color:var(--muted)!important}
+.menuItem{color:var(--text)!important}
+.menuItem strong{color:var(--text)!important;font-weight:800}
+.menuItem span{color:var(--muted)!important;opacity:1}
+body.light .appMenu h3,body.light .menuItem strong{color:var(--text)!important}
+body.light .menuItem span,body.light .appMenu .small,body.light .appMenu .muted{color:var(--muted)!important}
+.ghost{color:var(--text)}
+body.light .ghost{color:var(--text)}
+
 </style>
 </head>
 <body>
-<div class="top"><div class="brand"><h1>Marine Prep Pro <span class="versionMark">v5.2</span></h1><span class="badge">YEAR 1</span>
+<div class="top"><div class="brand"><h1>Marine Prep Pro <span class="versionMark">v5.4</span></h1><span class="badge">YEAR 1</span>
 <button class="menuButton" aria-label="Open menu" onclick="toggleAppMenu(event)">
  <span></span><span></span><span></span>
 </button></div></div>
@@ -193,7 +211,7 @@ body.light .top,body.light .nav{background:rgba(255,255,255,.96)}
  <div class="card"><h3>Achievements</h3><div id="achievements"></div></div>
 </section>
 
-<section id="week" class="hidden">
+<section id="week" 
  <div class="card">
   <h2>Weekly plan</h2>
   <div class="modeRow">
@@ -229,7 +247,7 @@ body.light .top,body.light .nav{background:rgba(255,255,255,.96)}
 </section>
 
 
-<section id="strength" class="hidden">
+<section id="strength" 
  <div class="card hero">
   <h2>Strength workout library</h2>
   <p class="muted small">Open any workout to see every exercise, the prescribed sets and reps, and a step-by-step demonstration. Semester workouts use gym equipment; break workouts use body weight and a backpack.</p>
@@ -237,10 +255,10 @@ body.light .top,body.light .nav{background:rgba(255,255,255,.96)}
  <div id="strengthLibrary"></div>
 </section>
 
-<section id="calendar" class="hidden"><div class="card"><h2>52-week calendar</h2><p class="muted small">Green means all seven days recorded complete. Gold means partially complete.</p><div class="calendar" id="calendarGrid"></div></div></section>
+<section id="calendar" <div class="card"><h2>52-week calendar</h2><p class="muted small">Green means all seven days recorded complete. Gold means partially complete.</p><div class="calendar" id="calendarGrid"></div></div></section>
 
 
-<section id="stats" class="hidden">
+<section id="stats" 
  <div class="card hero">
   <h2>Training statistics</h2>
   <p class="muted small">Long-term consistency, performance records, workout volume, and readiness trends.</p>
@@ -252,18 +270,18 @@ body.light .top,body.light .nav{background:rgba(255,255,255,.96)}
 </section>
 
 
-<section id="tools" class="hidden">
+<section id="tools" 
  <div class="card hero">
   <div class="row between">
    <div><h2>Tools & Progress</h2><p class="small muted">Logs, assessments, planning, recovery, records, and personalization.</p></div>
    <button class="ghost" onclick="toggleAppMenu(event)">Menu</button>
   </div>
   <div class="toolTabs">
-   <button id="toolTabProgress" class="active" onclick="showToolPanel('progress')">Progress log</button>
-   <button id="toolTabCommand" onclick="showToolPanel('command')">Command tools</button>
+   <button id="toolTabProgress" class="active" onclick="showToolPanel('progress')" style="font-weight:800">Progress log</button>
+   <button id="toolTabCommand" onclick="showToolPanel('command')" style="color:var(--text);font-weight:800">Command tools</button>
   </div>
  </div>
- <div id="toolPanelProgress"> class="hidden">
+ <div id="toolPanelProgress"> 
  <div class="card"><h2>Progress log</h2><div class="grid">
   <div class="metric"><label>Push-ups</label><input id="pushups" type="number"></div>
   <div class="metric"><label>Pull-ups</label><input id="pullups" type="number"></div>
@@ -278,7 +296,7 @@ body.light .top,body.light .nav{background:rgba(255,255,255,.96)}
  <div class="card"><h3>Swimming gates</h3><p class="muted small">Swimming advances independently from the rest of the program.</p><div id="swimGates"></div></div>
  <div class="card"><h3>Supplements</h3><div id="supplements"></div><div class="notice small" style="margin-top:12px">Because you use a GLP-1, review supplements and major increases in training with the clinician managing it.</div></div>
 </div>
- <div id="toolPanelCommand" class="hidden"> class="hidden">
+ <div id="toolPanelCommand"  
  
 
  <div class="card">
@@ -487,5 +505,5 @@ body.light .top,body.light .nav{background:rgba(255,255,255,.96)}
 <div id="timerModal" class="modal hidden" onclick="closeOnBackdrop(event,'timerModal')"><div class="sheet"><div class="row between"><h2>Workout timer</h2><button class="ghost" onclick="closeModal('timerModal')">Close</button></div><div class="timer" id="timerText">00:00</div><div class="timerBtns"><button onclick="timerStart()">Start</button><button class="secondary" onclick="timerPause()">Pause</button><button class="warn" onclick="timerReset()">Reset</button></div><div class="grid" style="margin-top:14px"><button class="ghost" onclick="setTimer(30)">30 sec</button><button class="ghost" onclick="setTimer(60)">1 min</button><button class="ghost" onclick="setTimer(90)">90 sec</button><button class="ghost" onclick="setTimer(120)">2 min</button><button class="ghost" onclick="setTimer(300)">5 min</button><button class="ghost" onclick="setTimer(600)">10 min</button></div></div></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="app.js?v=52"></script>
+<script src="app.js?v=54"></script>
 </body></html>

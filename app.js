@@ -7,7 +7,7 @@ let activeExerciseLogName=null;
 let trainingMode=localStorage.getItem('trainingMode')||'normal';
 
 
-const APP_VERSION='5.2';
+const APP_VERSION='5.4';
 const SUPABASE_URL='https://ewzmwoepcukxxeabimsy.supabase.co';
 const SUPABASE_PUBLISHABLE_KEY='sb_publishable_itOe_-3RBRY_6rlZ60LRWw_B02V7f3T';
 
@@ -1169,5 +1169,5 @@ if(localStorage.getItem('mp_last_version')!==APP_VERSION){
  nativeStorageSetItem.call(localStorage,'mp_last_version',APP_VERSION);
 }
 renderAll();drawChart();initCloudSync();if('serviceWorker'in navigator){
- navigator.serviceWorker.register('sw.js?v=52').then(reg=>reg.update()).catch(console.error);
+ navigator.serviceWorker.register('sw.js?v=54').then(reg=>reg.update()).catch(console.error);
 }

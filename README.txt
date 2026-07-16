@@ -111,3 +111,12 @@ Version 5.2:
 - Kept the bottom bar for frequently used daily sections.
 - Added menu shortcuts for Tools & Progress, Statistics, Appearance, and Cloud Backup.
 - Preserved old Log and Command navigation calls for compatibility.
+
+Version 5.3:
+- Fixed unreadable Command tools tab text color.
+- Cleaned up a stray visible HTML artifact in Tools & Progress.
+- Updated cache-busting so the corrected styles load reliably.
+
+Version 5.4:
+- Fixed unreadable header and description text colors in the three-line slide-out menu.
+- Ensured menu buttons, titles, and supporting text stay readable in dark and light themes.
