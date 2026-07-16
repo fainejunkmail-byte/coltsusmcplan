@@ -193,3 +193,7 @@ Version 6.6:
 - Added exercise-specific recommended rest periods.
 - Preserved existing running, walking, swimming, and interval instructions without artificial set-rest labels.
 - Updated prescriptions consistently on Today, Week, Strength Library, and exercise demos.
+
+Version 6.7:
+- Fixed blank Today and Week exercise lists caused by a missing HTML escaping helper.
+- Preserved individual exercise checkboxes and recommended rest formatting.

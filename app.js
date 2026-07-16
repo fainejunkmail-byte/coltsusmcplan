@@ -7,7 +7,7 @@ let activeExerciseLogName=null;
 let trainingMode=localStorage.getItem('trainingMode')||'normal';
 
 
-const APP_VERSION='6.6';
+const APP_VERSION='6.7';
 const SUPABASE_URL='https://ewzmwoepcukxxeabimsy.supabase.co';
 const SUPABASE_PUBLISHABLE_KEY='sb_publishable_itOe_-3RBRY_6rlZ60LRWw_B02V7f3T';
 
@@ -510,6 +510,11 @@ const EXERCISE_REST_SECONDS={
  'Wall Slide':30,'Chin Tuck':30,'Ankle Rocks':30,'Leg Swings':30,'Arm Circles':30,
  'Doorway Chest Stretch':30,'Hip-flexor Stretch':30
 };
+function escapeHtml(value){
+ return String(value??'').replace(/[&<>"']/g,ch=>({
+  '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+ })[ch]);
+}
 function formatPrescription(name,prescription){
  const raw=String(prescription||'').trim();
  const rest=EXERCISE_REST_SECONDS[name];
@@ -1466,5 +1471,5 @@ if(localStorage.getItem('mp_last_version')!==APP_VERSION){
 window.addEventListener('online',()=>{setCloudDiagnostic('Internet connection restored.');retryCloudSync()});
 window.addEventListener('offline',()=>{setCloudStatus('Offline. Data is saved locally.','busy');setCloudDiagnostic('Cloud sync will resume when internet returns.');showCloudRetry(true)});
 renderAll();drawChart();initCloudSync();setTimeout(()=>{const e=document.getElementById('walkDate');if(e&&!e.value)e.value=new Date().toISOString().slice(0,10)},0);if('serviceWorker'in navigator){
- navigator.serviceWorker.register('sw.js?v=66').then(reg=>reg.update()).catch(console.error);
+ navigator.serviceWorker.register('sw.js?v=67').then(reg=>reg.update()).catch(console.error);
 }
