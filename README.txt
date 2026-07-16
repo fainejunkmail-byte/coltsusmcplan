@@ -179,3 +179,17 @@ Version 6.4:
 - Video buttons now open only quick YouTube Shorts-style demonstrations.
 - Exercises without a suitable short clip show no video rather than linking to a long or weak tutorial.
 - Renamed the button to Watch quick demo.
+
+Version 6.5:
+- Added individual completion checkboxes to every planned item on Home → Today.
+- Added individual completion checkboxes to every planned item on the Week tab.
+- The full-day checkbox checks or clears all items for that day.
+- Days show partial progress such as “1 of 4 items checked” and “In progress.”
+- Weekly progress now reflects individual items instead of requiring all-or-nothing days.
+- Existing completed-day data remains compatible and is treated as all items complete.
+
+Version 6.6:
+- Standardized set-based exercise prescriptions as SetsxReps • Seconds Rest.
+- Added exercise-specific recommended rest periods.
+- Preserved existing running, walking, swimming, and interval instructions without artificial set-rest labels.
+- Updated prescriptions consistently on Today, Week, Strength Library, and exercise demos.

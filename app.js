@@ -7,7 +7,7 @@ let activeExerciseLogName=null;
 let trainingMode=localStorage.getItem('trainingMode')||'normal';
 
 
-const APP_VERSION='6.4';
+const APP_VERSION='6.6';
 const SUPABASE_URL='https://ewzmwoepcukxxeabimsy.supabase.co';
 const SUPABASE_PUBLISHABLE_KEY='sb_publishable_itOe_-3RBRY_6rlZ60LRWw_B02V7f3T';
 
@@ -495,14 +495,105 @@ function switchTab(id){
  if(id==='stats')renderStats();
  if(id==='tools'){showToolPanel(activeToolPanel);renderCommandCenter();drawChart()}
 }
-function pctForWeek(w){
- if(trainingMode!=='normal' && w!==currentWeek){
-  let s=JSON.parse(localStorage.getItem('mp_mode_'+trainingMode)||'{}');
-  return Math.round(DAYS.filter(d=>s[d]).length/7*100)
+
+const EXERCISE_REST_SECONDS={
+ 'Goblet Squat':90,'Bodyweight Squat':60,'Dumbbell Bench Press':90,'Incline Dumbbell Press':90,
+ 'Dumbbell Overhead Press':90,'Romanian Deadlift':120,'Backpack Romanian Deadlift':90,
+ 'Lat Pulldown':90,'Assisted Pull-up':120,'Scapular Pull-up':60,'Dead Hang':60,
+ 'Seated Cable Row':90,'Chest-supported Row':90,'Backpack Row':75,'Face Pull':60,
+ 'Step-up':75,'Reverse Lunge':75,'Push-up':75,'Incline Push-up':60,
+ 'Farmer Carry':90,'Suitcase Carry':90,'Backpack Carry':90,
+ 'Back Extension':60,'Glute Bridge':60,'Hip Hinge Practice':60,
+ 'Tibialis Raise':45,'Calf Raise':45,'Bent-knee Calf Raise':45,'Low Step-down':60,
+ 'Single-leg Balance':30,'Side-lying Leg Raise':45,
+ 'Modified Curl-up':45,'Side Plank':45,'Plank':45,'Bird Dog':45,'Dead Bug':45,
+ 'Wall Slide':30,'Chin Tuck':30,'Ankle Rocks':30,'Leg Swings':30,'Arm Circles':30,
+ 'Doorway Chest Stretch':30,'Hip-flexor Stretch':30
+};
+function formatPrescription(name,prescription){
+ const raw=String(prescription||'').trim();
+ const rest=EXERCISE_REST_SECONDS[name];
+ if(!rest || /•\s*\d+s\s*Rest/i.test(raw))return raw;
+ let m=raw.match(/^(\d+(?:–\d+)?)\s*[×x]\s*(.+)$/i);
+ if(m)return `${m[1]}x${m[2]} • ${rest}s Rest`;
+ m=raw.match(/^(\d+(?:–\d+)?)\s+(easy|submaximal|controlled)\s+sets?(.*)$/i);
+ if(m)return `${m[1]}x${m[2][0].toUpperCase()+m[2].slice(1)} sets${m[3]} • ${rest}s Rest`;
+ if(/^(?:Optional\s+)?\d+(?:–\d+)?(?:\s*sec)?(?:\/side|\/leg|\s+total)?$/i.test(raw)){
+  const optional=/^Optional\s+/i.test(raw);
+  const clean=raw.replace(/^Optional\s+/i,'');
+  return `${optional?'Optional ':''}1x${clean} • ${rest}s Rest`;
  }
- let s=getWeekState(w),done=DAYS.filter(d=>s[d]).length;return Math.round(done/7*100)
+ return raw;
+}
+function getItemCompletion(state,day,index,total){
+ const saved=state?._items?.[day];
+ if(Array.isArray(saved) && typeof saved[index]==='boolean')return saved[index];
+ return !!state?.[day];
+}
+function completedItemCount(state,day,total){
+ let count=0;
+ for(let i=0;i<total;i++)if(getItemCompletion(state,day,i,total))count++;
+ return count;
+}
+function ensureItemState(state,day,total){
+ if(!state._items || typeof state._items!=='object')state._items={};
+ if(!Array.isArray(state._items[day])){
+  state._items[day]=Array.from({length:total},()=>!!state[day]);
+ }else{
+  state._items[day]=Array.from({length:total},(_,i)=>!!state._items[day][i]);
+ }
+ return state._items[day];
+}
+function setWorkoutItemComplete(day,index,checked){
+ const plan=activePlan()[day];
+ if(!plan)return;
+ const itemTotal=plan.exercises.length;
+ let state=getWeekState(currentWeek);
+ const items=ensureItemState(state,day,itemTotal);
+ items[index]=!!checked;
+ state[day]=itemTotal===0?!!state[day]:items.length===itemTotal&&items.every(Boolean);
+ putWeekState(currentWeek,state);
+ renderAll();
+}
+function setWholeDayComplete(day,checked){
+ const plan=activePlan()[day];
+ if(!plan)return;
+ let state=getWeekState(currentWeek);
+ state[day]=!!checked;
+ if(plan.exercises.length){
+  state._items=state._items&&typeof state._items==='object'?state._items:{};
+  state._items[day]=Array.from({length:plan.exercises.length},()=>!!checked);
+ }
+ putWeekState(currentWeek,state);
+ renderAll();
+}
+function itemCheckHtml(day,e,index,state,label=''){
+ const checked=getItemCompletion(state,day,index,(activePlan()[day]?.exercises||[]).length);
+ return `<div class="itemCheckRow ${checked?'completed':''}">
+  <input class="itemCheck" type="checkbox" ${checked?'checked':''} aria-label="Mark ${escapeHtml(e.name)} complete" onclick="event.stopPropagation()" onchange="setWorkoutItemComplete(${JSON.stringify(day)},${index},this.checked)">
+  <div class="exercise" onclick='openDemo(${JSON.stringify(e.name)},${JSON.stringify(e.prescription)})'>
+   <div><strong>${escapeHtml(e.name)}</strong><span class="small muted">${escapeHtml(formatPrescription(e.name,e.prescription))}</span></div>
+   <span class="tap">${label||'Demo ›'}</span>
+  </div>
+ </div>`;
 }
 
+function pctForWeek(w){
+ const state=getWeekState(w);
+ const planWeek=activePlan();
+ let itemTotal=0,itemDone=0;
+ DAYS.forEach(day=>{
+  const count=planWeek[day]?.exercises?.length||0;
+  if(count){
+   itemTotal+=count;
+   itemDone+=completedItemCount(state,day,count);
+  }else{
+   itemTotal+=1;
+   if(state[day])itemDone+=1;
+  }
+ });
+ return itemTotal?Math.round(itemDone/itemTotal*100):0;
+}
 function renderWeek(){
  sel.value=currentWeek;
  const container=document.getElementById('weekDays');container.innerHTML='';
@@ -515,14 +606,27 @@ function renderWeek(){
 
  DAYS.forEach(day=>{
    const plan=planWeek[day];
+   const itemTotal=plan.exercises.length;
+   const itemDone=completedItemCount(state,day,itemTotal);
+   const dayChecked=itemTotal?itemDone===itemTotal:!!state[day];
    const wrap=document.createElement('div');wrap.className='day';
-   const exHtml=plan.exercises.map((e,i)=>`<div class="exercise" onclick='openDemo(${JSON.stringify(e.name)},${JSON.stringify(e.prescription)})'><div><strong>${e.name}</strong><span class="small muted">${e.prescription}</span></div><span class="tap">View demo ›</span></div>`).join('');
-   wrap.innerHTML=`<div class="dayhead"><input class="check" type="checkbox" ${state[day]?'checked':''}><div style="flex:1"><strong>${day}</strong><div class="small muted">${plan.title}</div>${exHtml||'<div class="small muted" style="margin-top:7px">Recovery or rest day</div>'}</div></div>`;
-   wrap.querySelector('.check').onchange=e=>{let s=getWeekState(currentWeek);s[day]=e.target.checked;putWeekState(currentWeek,s);renderAll()};
+   const exHtml=plan.exercises.map((e,i)=>itemCheckHtml(day,e,i,state,'View demo ›')).join('');
+   wrap.innerHTML=`<div class="dayhead">
+    <input class="check" type="checkbox" ${dayChecked?'checked':''} aria-label="Mark all of ${day} complete">
+    <div style="flex:1">
+     <strong>${day}</strong>
+     <div class="small muted">${plan.title}</div>
+     <div class="small muted dayProgressText">${itemTotal?itemDone+' of '+itemTotal+' items checked':'Recovery/rest day'}</div>
+     ${exHtml||'<div class="small muted" style="margin-top:7px">Check the day when your recovery or rest work is complete.</div>'}
+    </div>
+   </div>`;
+   wrap.querySelector('.check').onchange=e=>setWholeDayComplete(day,e.target.checked);
    container.appendChild(wrap);
  });
  ['sleep','energy','pain','weight','notes'].forEach(id=>document.getElementById(id).value=state[id]||'');
- const p=pctForWeek(currentWeek);document.getElementById('weekBar').style.width=p+'%';document.getElementById('weekPct').textContent=p+'% recorded complete';
+ const p=pctForWeek(currentWeek);
+ document.getElementById('weekBar').style.width=p+'%';
+ document.getElementById('weekPct').textContent=p+'% of individual items recorded complete';
 }
 function saveCheckin(){let s=getWeekState(currentWeek);['sleep','energy','pain','weight','notes','painLocation'].forEach(id=>{const e=document.getElementById(id);if(e)s[id]=e.value});putWeekState(currentWeek,s);renderAll();alert('Check-in saved.')}
 
@@ -533,10 +637,20 @@ function renderDashboard(){
  document.querySelectorAll('.modeSelect').forEach(s=>s.value=trainingMode);
  document.getElementById('modeBannerHome').innerHTML='<span class="modePill">'+info.label.toUpperCase()+'</span>'+info.description;
  document.getElementById('heroWeek').textContent=trainingMode==='normal'?'Week '+currentWeek:info.label;
- document.getElementById('heroBar').style.width=p+'%';document.getElementById('heroPct').textContent=p+'% of this schedule recorded complete';
+ document.getElementById('heroBar').style.width=p+'%';
+ document.getElementById('heroPct').textContent=p+'% of individual items recorded complete';
  const day=todayName(), plan=activePlan()[day], state=getWeekState(currentWeek);
- let ex=plan.exercises.map(e=>`<div class="exercise" onclick='openDemo(${JSON.stringify(e.name)},${JSON.stringify(e.prescription)})'><div><strong>${e.name}</strong><span class="small muted">${e.prescription}</span></div><span class="tap">Demo ›</span></div>`).join('');
- document.getElementById('todayCard').innerHTML=`<div class="row between"><div><strong>${day}</strong><div class="small muted">${plan.title}</div></div><span class="badge">${state[day]?'Complete':'Planned'}</span></div>${ex||'<p class="muted small">Rest or recovery day.</p>'}`;
+ const todayItemTotal=plan.exercises.length;
+ const todayItemDone=completedItemCount(state,day,todayItemTotal);
+ const allDone=todayItemTotal?todayItemDone===todayItemTotal:!!state[day];
+ const ex=plan.exercises.map((e,i)=>itemCheckHtml(day,e,i,state,'Demo ›')).join('');
+ document.getElementById('todayCard').innerHTML=`
+  <div class="row between">
+   <div><strong>${day}</strong><div class="small muted">${plan.title}</div></div>
+   <span class="badge">${allDone?'Complete':todayItemDone?'In progress':'Planned'}</span>
+  </div>
+  <div class="small muted todayProgress">${todayItemTotal?todayItemDone+' of '+todayItemTotal+' items checked':'Recovery or rest day'}</div>
+  ${ex||`<label class="itemCheckRow"><input class="itemCheck" type="checkbox" ${allDone?'checked':''} onchange="setWholeDayComplete(${JSON.stringify(day)},this.checked)"><span>${allDone?'Recovery/rest recorded complete':'Mark recovery/rest complete'}</span></label>`}`;
  let scores=readiness();
  let total100=Math.round((scores.consistency+scores.strength+scores.endurance+scores.swimming+scores.rucking+scores.recovery)/6);
  let total=total100*10;
@@ -834,7 +948,7 @@ function renderStrengthLibrary(){
  const host=document.getElementById('strengthLibrary');host.innerHTML='';
  groups.forEach((g,idx)=>{
   const list=(DATA.workoutLibrary&&DATA.workoutLibrary[g.key])||findWorkoutExercises(g.key);
-  const body=list.map(e=>`<div class="exercise" onclick='openDemo(${JSON.stringify(e.name)},${JSON.stringify(e.prescription)})'><div><strong>${e.name}</strong><span class="small muted">${e.prescription}</span></div><span class="tap">View steps ›</span></div>`).join('');
+  const body=list.map(e=>`<div class="exercise" onclick='openDemo(${JSON.stringify(e.name)},${JSON.stringify(e.prescription)})'><div><strong>${e.name}</strong><span class="small muted">${formatPrescription(e.name,e.prescription)}</span></div><span class="tap">View steps ›</span></div>`).join('');
   const card=document.createElement('div');card.className='workoutCard';
   card.innerHTML=`<div class="workoutHeader" onclick="toggleWorkout(${idx})"><div><h3>${g.name}</h3><div class="small muted">${g.sub}</div></div><span class="workoutTag">${g.tag}</span></div><div class="workoutBody ${idx===0?'':'hiddenBody'}" id="workoutBody${idx}">${body}</div>`;
   host.appendChild(card);
@@ -932,7 +1046,7 @@ function openDemo(name,prescription){
  const e=DATA.exercises[name]||{category:'Exercise',steps:['Set up in a stable position.','Perform the movement slowly and under control.','Return to the start without losing form.'],cues:['Move pain-free'],animation:'default'};
  activeDemo={name,prescription,e};activeDemoStep=0;
  document.getElementById('demoTitle').textContent=name;
- document.getElementById('demoPrescription').textContent=prescription||e.category;
+ document.getElementById('demoPrescription').textContent=formatPrescription(name,prescription)||e.category;
  document.getElementById('demoSteps').innerHTML=e.steps.map((x,i)=>'<li onclick="setDemoStep('+i+')" style="cursor:pointer">'+x+'</li>').join('');
  document.getElementById('demoCues').innerHTML=e.cues.map(x=>'<span class="chip">'+x+'</span>').join('');
  renderDemoStep();
@@ -1352,5 +1466,5 @@ if(localStorage.getItem('mp_last_version')!==APP_VERSION){
 window.addEventListener('online',()=>{setCloudDiagnostic('Internet connection restored.');retryCloudSync()});
 window.addEventListener('offline',()=>{setCloudStatus('Offline. Data is saved locally.','busy');setCloudDiagnostic('Cloud sync will resume when internet returns.');showCloudRetry(true)});
 renderAll();drawChart();initCloudSync();setTimeout(()=>{const e=document.getElementById('walkDate');if(e&&!e.value)e.value=new Date().toISOString().slice(0,10)},0);if('serviceWorker'in navigator){
- navigator.serviceWorker.register('sw.js?v=64').then(reg=>reg.update()).catch(console.error);
+ navigator.serviceWorker.register('sw.js?v=66').then(reg=>reg.update()).catch(console.error);
 }
