@@ -212,3 +212,9 @@ Version 6.7.2:
 - Migrates the former shared alternate-mode record into only the first week opened after upgrading.
 - Keeps normal-week and cloud/local backup compatibility.
 - Calendar completion now reflects individual normal-week items.
+
+Version 6.7.3:
+- Keeps the week selector visible for Hotel Week and every other alternate training mode.
+- Renames it to Progress week while an alternate mode is active.
+- Switching the selector immediately opens that mode's separate progress record for the chosen Year 1 week.
+- Adds clearer text explaining that alternate-mode progress is stored separately by week.

@@ -7,7 +7,7 @@ let activeExerciseLogName=null;
 let trainingMode=localStorage.getItem('trainingMode')||'normal';
 
 
-const APP_VERSION='6.7.2';
+const APP_VERSION='6.7.3';
 const SUPABASE_URL='https://ewzmwoepcukxxeabimsy.supabase.co';
 const SUPABASE_PUBLISHABLE_KEY='sb_publishable_itOe_-3RBRY_6rlZ60LRWw_B02V7f3T';
 
@@ -419,7 +419,7 @@ function activeModeInfo(){
  const info=DATA.trainingModes[trainingMode]||{label:'Alternate week',description:'Alternate training schedule.'};
  return {
   ...info,
-  description:info.description+' Progress is stored separately for Year 1 Week '+currentWeek+'.'
+  description:info.description+' Progress is stored separately for Year 1 Week '+currentWeek+'. Use the Progress week selector above to switch weeks.'
  };
 }
 function setTrainingMode(mode){
@@ -692,7 +692,11 @@ function renderWeek(){
   const state=getWeekState(currentWeek);
   document.querySelectorAll('.modeSelect').forEach(control=>control.value=trainingMode);
   const normalControl=document.getElementById('normalWeekControl');
-  if(normalControl)normalControl.style.display=trainingMode==='normal'?'block':'none';
+  if(normalControl){
+   normalControl.style.display='block';
+   const weekLabel=normalControl.querySelector('label');
+   if(weekLabel)weekLabel.textContent=trainingMode==='normal'?'Year 1 week':'Progress week';
+  }
 
   const info=activeModeInfo();
   const banner=document.getElementById('modeBannerWeek');
@@ -1683,7 +1687,7 @@ if(localStorage.getItem('mp_last_version')!==APP_VERSION){
 window.addEventListener('online',()=>{setCloudDiagnostic('Internet connection restored.');retryCloudSync()});
 window.addEventListener('offline',()=>{setCloudStatus('Offline. Data is saved locally.','busy');setCloudDiagnostic('Cloud sync will resume when internet returns.');showCloudRetry(true)});
 renderAll();drawChart();initCloudSync();setTimeout(()=>{const e=document.getElementById('walkDate');if(e&&!e.value)e.value=new Date().toISOString().slice(0,10)},0);if('serviceWorker'in navigator){
- navigator.serviceWorker.register('sw.js?v=672').then(reg=>reg.update()).catch(console.error);
+ navigator.serviceWorker.register('sw.js?v=673').then(reg=>reg.update()).catch(console.error);
 }
 
 
