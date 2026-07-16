@@ -7,7 +7,7 @@ let activeExerciseLogName=null;
 let trainingMode=localStorage.getItem('trainingMode')||'normal';
 
 
-const APP_VERSION='5.5';
+const APP_VERSION='5.6';
 const SUPABASE_URL='https://ewzmwoepcukxxeabimsy.supabase.co';
 const SUPABASE_PUBLISHABLE_KEY='sb_publishable_itOe_-3RBRY_6rlZ60LRWw_B02V7f3T';
 
@@ -1032,7 +1032,7 @@ function renderCommandCenter(){
  el.innerHTML=`<div class="metric"><label>${todayName()} · ${trainingModeLabel()}</label><strong>${day?.title||'Rest / unscheduled'}</strong><div class="small muted">${day?.exercises?.length||0} planned items · ${completionForToday()?'Completed':'Not completed'}</div></div>
  ${plan?`<div class="commandAlert">Planned period active: <strong>${plan.label||plan.mode}</strong></div>`:''}
  ${warning?`<div class="commandAlert detailWarn">${warning}</div>`:''}`;
- renderRunSummary();renderSwimConfidence();renderStandards();renderTestHistory();renderPlans();renderCheckpoints();renderSubstitutions();loadReminderReflection();renderPhotos();
+ renderWalkSummary();renderRunSummary();renderSwimConfidence();renderStandards();renderTestHistory();renderPlans();renderCheckpoints();renderSubstitutions();loadReminderReflection();renderPhotos();
 }
 function minimumWorkout(){
  alert('Minimum viable workout:\\n• 5-minute easy walk or march\\n• 2×10 calf raises\\n• 2×10 tibialis raises\\n• 2×30-sec hip-flexor stretch\\n• 5 slow breaths\\n\\nThis preserves the habit without trying to replace a full missed session.');
@@ -1065,6 +1065,34 @@ function deloadRecommendation(show=true){
 function showDeloadAdvice(){deloadRecommendation(true)}
 
 function parseClock(v){if(!v||!v.includes(':'))return 0;const p=v.split(':').map(Number);return p[0]*60+p[1]}
+
+function saveWalkLog(){
+ const miles=Number(document.getElementById('walkMiles').value||0);
+ const minutes=Number(document.getElementById('walkMinutes').value||0);
+ const steps=Number(document.getElementById('walkSteps').value||0);
+ if(!miles&&!minutes&&!steps){alert('Enter at least distance, time, or steps.');return}
+ const rows=getJSON('mp_walk_logs',[]);
+ rows.push({date:document.getElementById('walkDate').value||new Date().toISOString().slice(0,10),miles,minutes,steps,notes:document.getElementById('walkNotes').value.trim()});
+ setJSON('mp_walk_logs',rows);
+ document.getElementById('walkMiles').value='';
+ document.getElementById('walkMinutes').value='';
+ document.getElementById('walkSteps').value='';
+ document.getElementById('walkNotes').value='';
+ renderWalkSummary();
+ alert('Walking total saved.');
+}
+function renderWalkSummary(){
+ const el=document.getElementById('walkSummary');if(!el)return;
+ const rows=getJSON('mp_walk_logs',[]);
+ const today=new Date();const cutoff=new Date(today);cutoff.setDate(today.getDate()-6);
+ const recent=rows.filter(r=>new Date(r.date+'T12:00:00')>=cutoff);
+ const miles=recent.reduce((a,b)=>a+Number(b.miles||0),0);
+ const minutes=recent.reduce((a,b)=>a+Number(b.minutes||0),0);
+ const steps=recent.reduce((a,b)=>a+Number(b.steps||0),0);
+ const last=rows[rows.length-1];
+ el.innerHTML=`<div class="grid"><div class="metric"><label>Last 7 days</label><strong>${miles.toFixed(1)} mi</strong></div><div class="metric"><label>Walking time</label><strong>${minutes} min</strong></div><div class="metric"><label>Steps</label><strong>${steps.toLocaleString()}</strong></div></div>${last?`<div class="small muted" style="margin-top:8px">Latest: ${last.date}${last.notes?' · '+last.notes:''}</div>`:''}`;
+}
+
 function saveRunLog(){
  const miles=Number(document.getElementById('runMiles').value),time=document.getElementById('runTime').value;
  if(!miles||!parseClock(time)){alert('Enter distance and a valid time such as 24:30.');return}
@@ -1168,6 +1196,6 @@ if(localStorage.getItem('mp_last_version')!==APP_VERSION){
  }
  nativeStorageSetItem.call(localStorage,'mp_last_version',APP_VERSION);
 }
-renderAll();drawChart();initCloudSync();if('serviceWorker'in navigator){
- navigator.serviceWorker.register('sw.js?v=55').then(reg=>reg.update()).catch(console.error);
+renderAll();drawChart();initCloudSync();setTimeout(()=>{const e=document.getElementById('walkDate');if(e&&!e.value)e.value=new Date().toISOString().slice(0,10)},0);if('serviceWorker'in navigator){
+ navigator.serviceWorker.register('sw.js?v=56').then(reg=>reg.update()).catch(console.error);
 }

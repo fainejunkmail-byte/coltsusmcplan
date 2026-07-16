@@ -125,3 +125,8 @@ Version 5.5:
 - Bottom bar now contains Home, Week, Calendar, and Logs.
 - Moved Statistics and Strength Library into the three-line menu.
 - Command tools remain in the three-line menu.
+
+Version 5.6:
+- Added daily walking totals for distance, time, steps, and notes.
+- Added rolling 7-day walking totals.
+- Walking remains separate from run and ruck readiness scoring.
